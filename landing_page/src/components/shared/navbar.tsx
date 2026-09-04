@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/sheet";
 
 const NAV_LINKS = [
-  { name: "Beranda", href: "#hero" },
-  { name: "Tema Undangan", href: "#tema-undangan" },
-  { name: "Testimoni", href: "#testimonials" },
-  { name: "FAQ", href: "#faq" },
+  { name: "Beranda", href: "/#hero" },
+  { name: "Tema Undangan", href: "/#tema-undangan" },
+  { name: "Testimoni", href: "/#testimonials" },
+  { name: "FAQ", href: "/#faq" },
 ];
 
 export default function Navbar() {
@@ -54,12 +54,12 @@ export default function Navbar() {
         {/* ================= BRAND LOGO & NAME ================= */}
         <Link href="/" className="flex items-center gap-3 group">
           <div
-            className={`relative h-9 w-9 overflow-hidden transition-transform duration-300 group-hover:scale-105 ${
+            className={`relative h-9 w-9 overflow-hidden transition-transform duration-300 ${
               isVisible ? "animate-zoom-in" : "opacity-0"
             }`}
           >
             <Image
-              src="/logo.avif"
+              src="/logo_light.avif"
               alt="Logo Saji Janji"
               fill
               priority
@@ -68,7 +68,7 @@ export default function Navbar() {
           </div>
 
           <span
-            className={`font-caveat text-2xl font-bold tracking-wide text-foreground transition-colors group-hover:text-neutral-400 ${
+            className={`font-caveat text-2xl font-bold tracking-wide text-foreground ${
               isVisible ? "animate-slide-in-left" : "opacity-0"
             }`}
           >
@@ -97,8 +97,8 @@ export default function Navbar() {
             className={isVisible ? "animate-zoom-in" : "opacity-0"}
             style={{ animationDelay: "600ms" }}
           >
-            <Button className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-transform hover:scale-105 active:scale-95">
-              <Link href="#templates">Lihat Tema</Link>
+            <Button className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-transform active:scale-95">
+              <Link href="/tema">Jelajahi Tema</Link>
             </Button>
           </div>
         </div>
@@ -146,12 +146,12 @@ export default function Navbar() {
                   <SheetClose
                     render={
                       <Link
-                        href="#templates"
-                        className="flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                        href="/tema"
+                        className="flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98]"
                       />
                     }
                   >
-                    Lihat Tema
+                    Jelajahi Tema
                   </SheetClose>
                 </div>
               </div>

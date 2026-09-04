@@ -103,7 +103,7 @@ export default function InvitationThemes() {
           {THEMES.map((theme, index) => (
             <Card
               key={theme.id}
-              className={`group flex flex-col overflow-hidden rounded-3xl border border-border/50 bg-card/60 p-3 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-border ${
+              className={`group flex flex-col overflow-hidden rounded-3xl bg-card/60 p-3 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl ${
                 isVisible ? "animate-zoom-in" : "opacity-0"
               }`}
               style={{ animationDelay: `${(index + 2) * 150}ms` }}
@@ -115,7 +115,7 @@ export default function InvitationThemes() {
                   alt={theme.title}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover transition-transform duration-700 ease-out"
                 />
 
                 {/* Subtle Inner Overlay */}
@@ -167,7 +167,7 @@ export default function InvitationThemes() {
                   {/* Button Order */}
                   <Button
                     
-                    className={`w-full rounded-full bg-primary text-primary-foreground shadow-xs transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-95 ${
+                    className={`w-full rounded-full bg-primary text-primary-foreground shadow-xs transition-all duration-300 hover:shadow-md active:scale-95 ${
                       isVisible ? "animate-zoom-in" : "opacity-0"
                     }`}
                   >

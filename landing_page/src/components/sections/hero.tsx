@@ -31,7 +31,7 @@ export default function HeroSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden py-8 bg-background text-foreground"
+      className="relative overflow-hidden py-12 md:18 lg:24 bg-background text-foreground"
     >
       {/* Background Decorative Glow */}
       <div
@@ -79,7 +79,7 @@ export default function HeroSection() {
               <Button
                 
                 size="lg"
-                className="w-full sm:w-auto rounded-full bg-primary px-8 py-6 text-base font-medium text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95 group"
+                className="w-full sm:w-auto rounded-full bg-primary px-8 py-6 text-base font-medium text-primary-foreground shadow-lg transition-transform duration-300 active:scale-95 group"
               >
                 <Link href="/order" className="flex items-center justify-center gap-2">
                   Order Undangan
@@ -92,33 +92,12 @@ export default function HeroSection() {
                 
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto rounded-full border-border/80 px-8 py-6 text-base font-medium transition-transform duration-300 hover:scale-105 hover:bg-secondary active:scale-95"
+                className="w-full sm:w-auto rounded-full border-border/80 px-8 py-6 text-base font-medium transition-transform duration-300 hover:bg-secondary active:scale-95"
               >
-                <Link href="/tema-undangan">
+                <Link href="/tema">
                   Lihat Tema
                 </Link>
               </Button>
-            </div>
-
-            {/* Micro Social Proof / Metric */}
-            <div
-              className={`flex items-center gap-4 pt-4 text-xs md:text-sm text-muted-foreground ${
-                isVisible ? "animate-slide-in-bottom" : "opacity-0"
-              }`}
-              style={{ animationDelay: "500ms" }}
-            >
-              <div className="flex -space-x-2">
-                <div className="inline-block h-8 w-8 rounded-full ring-2 ring-background overflow-hidden relative">
-                  <Image src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Client 1" fill className="object-cover" />
-                </div>
-                <div className="inline-block h-8 w-8 rounded-full ring-2 ring-background overflow-hidden relative">
-                  <Image src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Client 2" fill className="object-cover" />
-                </div>
-                <div className="inline-block h-8 w-8 rounded-full ring-2 ring-background overflow-hidden relative">
-                  <Image src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Client 3" fill className="object-cover" />
-                </div>
-              </div>
-              <span>Dipercaya <strong>500+</strong> pasangan pengantin</span>
             </div>
 
           </div>
@@ -136,7 +115,7 @@ export default function HeroSection() {
 
             {/* Frame 2: Main Image Frame */}
             <div
-              className={`relative w-[280px] h-[380px] sm:w-[340px] sm:h-[460px] rounded-t-[140px] rounded-b-[20px] overflow-hidden shadow-2xl border-2 border-border/80 bg-card transform rotate-3 transition-all duration-500 hover:rotate-0 hover:scale-[1.02] group ${
+              className={`relative w-[280px] h-[380px] sm:w-[340px] sm:h-[460px] rounded-t-[140px] rounded-b-[20px] overflow-hidden shadow-xl border-2 border-border/80 bg-card transform rotate-3 transition-all duration-500 hover:rotate-0 hover:scale-[1.02] group ${
                 isVisible ? "animate-zoom-in" : "opacity-0"
               }`}
               style={{ animationDelay: "400ms" }}
@@ -154,7 +133,7 @@ export default function HeroSection() {
 
             {/* Floating Glassmorphic Badge */}
             <div
-              className={`absolute -bottom-4 left-4 sm:left-10 bg-background/90 backdrop-blur-md border border-border p-4 rounded-2xl shadow-xl flex items-center gap-3 ${
+              className={`absolute -bottom-4 left-4 sm:left-10 bg-background/90 backdrop-blur-md border border-border p-4 rounded-2xl shadow-lg flex items-center gap-3 ${
                 isVisible ? "animate-slide-in-left" : "opacity-0"
               }`}
               style={{ animationDelay: "600ms" }}

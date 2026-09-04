@@ -108,7 +108,6 @@ export default function TestimonialSection() {
               style={{ animationDelay: `${(index + 2) * 150}ms` }}
             >
               {/* Watermark Quote Icon Background */}
-              <Quote className="absolute right-4 top-4 h-16 w-16 text-muted-foreground/10 transition-transform duration-500 group-hover:scale-110" />
 
               <div className="relative z-10 space-y-4">
                 {/* Rating Stars */}

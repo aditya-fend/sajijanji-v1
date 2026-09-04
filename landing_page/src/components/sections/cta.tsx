@@ -79,7 +79,7 @@ export default function CTASection() {
             {/* Primary Button */}
             <Button
               size="lg"
-              className="w-full sm:w-auto rounded-full bg-primary text-primary-foreground px-8 font-medium shadow-xs transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-95"
+              className="w-full sm:w-auto rounded-full bg-primary text-primary-foreground px-8 font-medium shadow-xs transition-all duration-300 hover:shadow-md active:scale-95"
             >
               <Link
                 href="#tema-undangan"
