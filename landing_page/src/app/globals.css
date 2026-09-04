@@ -1,0 +1,259 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   1. Theme Configuration (Tailwind v4) & Variables Mapping
+   ========================================================================== */
+@theme inline {
+  --font-caveat: var(--font-caveat), cursive;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* ==========================================================================
+   2. Color Palette (Monochrome Neutral / Off-Black & Off-White)
+   ========================================================================== */
+:root {
+  /* Light Mode (Soft Off-White) */
+  --background: oklch(0.985 0 0);          /* #FAFAFA */
+  --foreground: oklch(0.145 0 0);          /* #171717 */
+
+  --card: oklch(1 0 0);                    /* Pure White Surface */
+  --card-foreground: oklch(0.145 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.145 0 0);              /* Charcoal Black CTA */
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.94 0 0);            /* Light Gray Accent */
+  --secondary-foreground: oklch(0.145 0 0);
+
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.48 0 0);     /* Soft Gray Text */
+
+  --accent: oklch(0.94 0 0);
+  --accent-foreground: oklch(0.145 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.91 0 0);               /* Soft Border */
+  --input: oklch(0.91 0 0);
+  --ring: oklch(0.145 0 0);
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Dark Mode (Luxury Rich Black) */
+  --background: oklch(0.1 0 0);            /* Deep Off-Black #0D0D0D */
+  --foreground: oklch(0.95 0 0);           /* Soft White #F2F2F2 */
+
+  --card: oklch(0.14 0 0);                 /* Dark Surface #141414 */
+  --card-foreground: oklch(0.95 0 0);
+
+  --popover: oklch(0.14 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+
+  --primary: oklch(0.985 0 0);             /* Bright White CTA */
+  --primary-foreground: oklch(0.145 0 0);
+
+  --secondary: oklch(0.2 0 0);             /* Dark Gray Button/Badge */
+  --secondary-foreground: oklch(0.95 0 0);
+
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.65 0 0);     /* Muted Gray Text */
+
+  --accent: oklch(0.2 0 0);
+  --accent-foreground: oklch(0.95 0 0);
+
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.22 0 0);              /* Dark Subtle Border */
+  --input: oklch(0.22 0 0);
+  --ring: oklch(0.85 0 0);
+}
+
+/* ==========================================================================
+   3. Base Styles
+   ========================================================================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-zinc-800 selection:text-zinc-100 dark:selection:bg-zinc-200 dark:selection:text-zinc-900;
+  }
+}
+
+/* ==========================================================================
+   4. Custom Utility Classes & Smooth Spring Animations
+   ========================================================================== */
+
+/* Utility Font Caveat */
+.font-caveat {
+  font-family: var(--font-caveat), cursive;
+}
+
+/* --------------------------------------------------------------------------
+   Keyframe Definitions (Pure Linear Vector)
+   -------------------------------------------------------------------------- */
+
+/* 1. Masuk dari Kiri ke Kanan */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-32px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 2. Masuk dari Atas ke Bawah */
+@keyframes slideInTop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -32px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 3. Masuk dari Kanan ke Kiri */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translate3d(32px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 4. Masuk dari Bawah ke Atas */
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 5. Zoom In */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale3d(0.94, 0.94, 1);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+/* 6. Zoom Out */
+@keyframes zoomOut {
+  from {
+    opacity: 0;
+    transform: scale3d(1.06, 1.06, 1);
+  }
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Animation Utility Classes
+   - Cubic-bezier(0.16, 1, 0.3, 1) memberikan transisi spring ultra-smooth
+   - Optimasi translateZ(0) & backface-visibility memicu GPU acceleration
+   -------------------------------------------------------------------------- */
+
+.animate-slide-in-left,
+.animate-slide-in-top,
+.animate-slide-in-right,
+.animate-slide-in-bottom,
+.animate-zoom-in,
+.animate-zoom-out {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-top {
+  animation: slideInTop 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-zoom-out {
+  animation: zoomOut 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
