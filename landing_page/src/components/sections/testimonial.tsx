@@ -85,16 +85,6 @@ export default function TestimonialSection() {
               Pasangan Bahagia
             </span>
           </h2>
-
-          {/* Page Description */}
-          <p
-            className={`max-w-2xl text-sm md:text-base text-muted-foreground ${
-              isVisible ? "animate-slide-in-bottom" : hiddenClass
-            }`}
-            style={{ animationDelay: "300ms" }}
-          >
-            Dengarkan pengalaman langsung dari pasangan yang telah mempercayakan momen spesial mereka menggunakan undangan digital kami.
-          </p>
         </div>
 
         {/* ================= RESPONSIVE GRID ================= */}
@@ -102,7 +92,7 @@ export default function TestimonialSection() {
           {TESTIMONIALS.map((testi, index) => (
             <Card
               key={testi.id}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border/50 bg-card/60 p-6 md:p-7 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-border ${
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-4xl border border-border/50 bg-card/60 p-6 md:p-7 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-border ${
                 isVisible ? "animate-zoom-in" : hiddenClass
               }`}
               style={{ animationDelay: `${(index + 2) * 150}ms` }}
@@ -131,7 +121,7 @@ export default function TestimonialSection() {
               </div>
 
               {/* Author Detail */}
-              <div className="relative z-10 flex items-center gap-3 pt-6 mt-6 border-t border-border/40">
+              <div className="relative z-10 flex items-center gap-3 pt-6 border-t border-border/40">
                 <Avatar className="h-10 w-10 border border-border/60">
                   <AvatarImage src={testi.avatar} alt={testi.name} />
                   <AvatarFallback>{testi.name.slice(0, 2)}</AvatarFallback>

@@ -175,7 +175,7 @@ export default function Canvas() {
           });
         }
 
-        if (animation.loop !== "none") {
+        if (animation.loop !== "none" && animation.loop !== "wind-sway") {
           const loopOffset = {
             "fade-up": { y: -8 },
             "fade-right": { x: 8 },
@@ -183,9 +183,9 @@ export default function Canvas() {
             "fade-left": { x: -8 },
             "fade-in": { opacity: 0.35 },
             "fade-out": { opacity: 0.35 },
-            "wind-sway": {},
             none: {},
           }[animation.loop];
+
           gsap.to(target, {
             ...loopOffset,
             duration: 1.2,

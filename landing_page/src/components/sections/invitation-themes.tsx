@@ -6,14 +6,12 @@ import Link from "next/link";
 import { Eye, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 const THEMES = [
   {
     id: "classic-monochrome",
     title: "Monochrome Luxe",
-    description:
-      "Perpaduan warna hitam dan putih kontras tinggi yang menghadirkan nuansa mewah dan timeless.",
+    price: 20000,
     image:
       "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
     slug: "monochrome-luxe",
@@ -22,8 +20,7 @@ const THEMES = [
   {
     id: "botanical-aesthetic",
     title: "Ethereal Botanical",
-    description:
-      "Sentuhan elemen garis daun minimalis dengan warna monokrom lembut yang menenangkan.",
+    price: 15000,
     image:
       "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=800&q=80",
     slug: "ethereal-botanical",
@@ -32,8 +29,7 @@ const THEMES = [
   {
     id: "typography-bold",
     title: "Serif & Cursive",
-    description:
-      "Fokus pada keindahan aksen huruf script bergaya tulisan tangan yang artistik dan elegan.",
+    price: 20000,
     image:
       "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=800&q=80",
     slug: "serif-cursive",
@@ -53,7 +49,7 @@ export default function InvitationThemes() {
           if (sectionRef.current) observer.unobserve(sectionRef.current);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (sectionRef.current) {
@@ -72,7 +68,6 @@ export default function InvitationThemes() {
       <div className="container mx-auto px-4 md:px-8">
         {/* ================= SECTION TITLE & HEADLINE ================= */}
         <div className="flex flex-col items-center text-center space-y-4 mb-12 md:mb-16">
-
           {/* Page Title */}
           <h2
             className={`text-3xl md:text-5xl font-bold tracking-tight ${
@@ -85,17 +80,6 @@ export default function InvitationThemes() {
               Eksklusif & Aesthetic
             </span>
           </h2>
-
-          {/* Page Description */}
-          <p
-            className={`max-w-2xl text-sm md:text-base text-muted-foreground ${
-              isVisible ? "animate-slide-in-bottom" : "opacity-0"
-            }`}
-            style={{ animationDelay: "300ms" }}
-          >
-            Temukan desain terbaik yang mencerminkan kisah cinta Anda. Setiap
-            tema dikerjakan secara presisi dan responsif di semua perangkat.
-          </p>
         </div>
 
         {/* ================= RESPONSIVE GRID ================= */}
@@ -103,7 +87,7 @@ export default function InvitationThemes() {
           {THEMES.map((theme, index) => (
             <Card
               key={theme.id}
-              className={`group flex flex-col overflow-hidden rounded-3xl bg-card/60 p-3 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl ${
+              className={`group flex flex-col overflow-hidden rounded-4xl bg-card/60 p-3 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl ${
                 isVisible ? "animate-zoom-in" : "opacity-0"
               }`}
               style={{ animationDelay: `${(index + 2) * 150}ms` }}
@@ -120,12 +104,11 @@ export default function InvitationThemes() {
 
                 {/* Subtle Inner Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
               </div>
 
               {/* Detail Kartu */}
               <div className="flex flex-1 flex-col justify-between px-1.5 pt-4 pb-2">
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 flex justify-between items-center">
                   {/* Title */}
                   <h3
                     className={`font-caveat text-2xl md:text-3xl font-bold tracking-wide text-foreground ${
@@ -141,7 +124,7 @@ export default function InvitationThemes() {
                       isVisible ? "animate-slide-in-bottom" : "opacity-0"
                     }`}
                   >
-                    {theme.description}
+                    Rp {theme.price.toLocaleString("id-ID")}
                   </p>
                 </div>
 
@@ -149,8 +132,8 @@ export default function InvitationThemes() {
                 <div className="grid grid-cols-2 gap-2.5 pt-5">
                   {/* Button Preview */}
                   <Button
-                    
                     variant="outline"
+                    size="lg"
                     className={`w-full rounded-full border-border/60 bg-transparent text-foreground hover:bg-secondary/60 transition-all duration-300 active:scale-95 ${
                       isVisible ? "animate-zoom-in" : "opacity-0"
                     }`}
@@ -166,7 +149,7 @@ export default function InvitationThemes() {
 
                   {/* Button Order */}
                   <Button
-                    
+                    size="lg"
                     className={`w-full rounded-full bg-primary text-primary-foreground shadow-xs transition-all duration-300 hover:shadow-md active:scale-95 ${
                       isVisible ? "animate-zoom-in" : "opacity-0"
                     }`}

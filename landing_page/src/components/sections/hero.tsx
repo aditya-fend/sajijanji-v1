@@ -31,23 +31,18 @@ export default function HeroSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden py-12 md:18 lg:24 bg-background text-foreground"
+      className="relative h-dvh overflow-hidden py-12 md:18 lg:24 bg-background text-foreground"
     >
-      {/* Background Decorative Glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-neutral-200/40 dark:bg-neutral-800/20 blur-[120px] rounded-full animate-subtle-pulse"
-      />
 
-      <div className="container mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <div className="container h-full mx-auto px-4 md:px-8">
+        <div className="flex h-full items-center gap-12 lg:grid-cols-2 lg:gap-16">
           
           {/* ================= KOLOM KIRI: TEKS & CTA ================= */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left space-y-6">
 
             {/* Main Title / Headline */}
             <h1
-              className={`text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.15] ${
+              className={`md:max-w-[70%] text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.15] ${
                 isVisible ? "animate-slide-in-left" : "opacity-0"
               }`}
               style={{ animationDelay: "200ms" }}
@@ -103,7 +98,7 @@ export default function HeroSection() {
           </div>
 
           {/* ================= KOLOM KANAN: UNIQUE FRAMED IMAGE ================= */}
-          <div className="relative flex justify-center items-center lg:justify-end">
+          <div className="relative hidden sm:flex justify-center items-center lg:justify-end">
             
             {/* Frame 1: Arch Aesthetic Background */}
             <div

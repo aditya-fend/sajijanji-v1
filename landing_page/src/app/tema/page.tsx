@@ -768,7 +768,7 @@ export default function TemaPage() {
               {currentThemes.map((theme, index) => (
                 <Card
                   key={theme.id}
-                  className={`group flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-3xl border border-border/50 bg-card/60 p-2.5 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-border ${
+                  className={`group flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-4xl border border-border/50 bg-card/60 p-2.5 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:border-border ${
                     isVisible ? "animate-zoom-in" : hiddenClass
                   }`}
                   style={{ animationDelay: `${((index % 10) + 1) * 100}ms` }}
@@ -783,39 +783,21 @@ export default function TemaPage() {
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
-
-                      {/* Category Badge & Special Badge */}
-                      <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between gap-1 sm:gap-2">
-                        <Badge
-                          variant="secondary"
-                          className="rounded-full border border-border/40 bg-background/80 text-foreground/90 backdrop-blur-md px-2 py-0.5 text-[9px] sm:text-[10px] font-medium capitalize shadow-xs"
-                        >
-                          {theme.category}
-                        </Badge>
-                        {theme.badge && (
-                          <Badge className="rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-[9px] sm:text-[10px] font-medium shadow-xs">
-                            {theme.badge}
-                          </Badge>
-                        )}
-                      </div>
                     </div>
 
                     {/* Content Detail */}
-                    <div className="px-1 pt-3 sm:pt-4">
-                      <h3 className="font-caveat text-xl sm:text-2xl font-bold tracking-wide text-foreground line-clamp-1">
+                    <div className="flex justify-between items-center px-1 pt-3 sm:pt-4">
+                      <h3 className="font-caveat text-md sm:text-lg font-bold tracking-wide text-foreground line-clamp-1">
                         {theme.title}
                       </h3>
                       <p className="text-[11px] sm:text-xs font-semibold text-primary mt-0.5">
                         Rp {theme.price.toLocaleString("id-ID")}
                       </p>
-                      <p className="text-[11px] sm:text-xs text-muted-foreground line-clamp-2 leading-relaxed mt-1.5 sm:mt-2">
-                        {theme.description}
-                      </p>
                     </div>
                   </div>
 
                   {/* Actions Button */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 pt-3 sm:pt-4 mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 pt-2">
                     <Button
                       variant="outline"
                       size="sm"

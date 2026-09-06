@@ -91,16 +91,6 @@ export default function FAQSection() {
               Sering Diajukan
             </span>
           </h2>
-
-          {/* Page Description */}
-          <p
-            className={`max-w-xl text-sm md:text-base text-muted-foreground ${
-              isVisible ? "animate-slide-in-bottom" : hiddenClass
-            }`}
-            style={{ animationDelay: "300ms" }}
-          >
-            Temukan jawaban lengkap atas hal-hal yang sering ditanyakan mengenai layanan undangan digital kami.
-          </p>
         </div>
 
         {/* ================= ACCORDION FAQ ================= */}

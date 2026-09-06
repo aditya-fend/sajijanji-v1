@@ -46,9 +46,7 @@ export default function Navbar() {
   return (
     <header
       ref={headerRef}
-      className={`sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md transition-all ${
-        isVisible ? "animate-slide-in-top" : "opacity-0"
-      }`}
+      className="sticky top-0 z-50 w-full bg-background transition-all dark"
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
         {/* ================= BRAND LOGO & NAME ================= */}
@@ -59,7 +57,7 @@ export default function Navbar() {
             }`}
           >
             <Image
-              src="/logo_light.avif"
+              src="/logo_dark.avif"
               alt="Logo Saji Janji"
               fill
               priority
@@ -130,6 +128,7 @@ export default function Navbar() {
                   {NAV_LINKS.map((link) => (
                     <SheetClose
                       key={link.href}
+                      nativeButton={false}
                       render={
                         <Link
                           href={link.href}
@@ -144,6 +143,7 @@ export default function Navbar() {
 
                 <div className="mt-auto border-t border-border/40 p-6">
                   <SheetClose
+                    nativeButton={false}
                     render={
                       <Link
                         href="/tema"
