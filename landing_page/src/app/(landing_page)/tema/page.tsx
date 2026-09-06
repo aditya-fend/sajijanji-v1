@@ -522,11 +522,6 @@ export default function TemaPage() {
     });
   }, [searchQuery, selectedCategory, maxPrice]);
 
-  // Reset pagination saat pencarian/filter berubah
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory, maxPrice]);
-
   // Calculations for Pagination
   const totalPages = Math.ceil(filteredThemes.length / ITEMS_PER_PAGE);
   const currentThemes = useMemo(() => {
@@ -541,10 +536,30 @@ export default function TemaPage() {
     setIsFilterOpen(true);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo(0, 0);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === "Enter") {
+      setCurrentPage(1);
+      scrollToTop();
+    }
+  };
+
   const handleApplyFilter = () => {
     setSelectedCategory(tempCategory);
     setMaxPrice(tempMaxPrice);
+    setCurrentPage(1);
     setIsFilterOpen(false);
+    scrollToTop();
   };
 
   const handleResetFilter = () => {
@@ -552,7 +567,9 @@ export default function TemaPage() {
     setTempMaxPrice(200000);
     setSelectedCategory("all");
     setMaxPrice(200000);
+    setCurrentPage(1);
     setIsFilterOpen(false);
+    scrollToTop();
   };
 
   return (
@@ -588,12 +605,13 @@ export default function TemaPage() {
                 type="text"
                 placeholder="Cari tema..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="pl-9 pr-4 rounded-full border-border/60 bg-card/60 focus-visible:ring-1"
               />
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => handleSearchChange("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -728,7 +746,7 @@ export default function TemaPage() {
                 Kata: {searchQuery}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => handleSearchChange("")}
                 />
               </Badge>
             )}
@@ -740,7 +758,11 @@ export default function TemaPage() {
                 Kategori: {selectedCategory}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSelectedCategory("all")}
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setCurrentPage(1);
+                    scrollToTop();
+                  }}
                 />
               </Badge>
             )}
@@ -752,7 +774,11 @@ export default function TemaPage() {
                 &le; Rp {maxPrice.toLocaleString("id-ID")}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => setMaxPrice(200000)}
+                  onClick={() => {
+                    setMaxPrice(200000);
+                    setCurrentPage(1);
+                    scrollToTop();
+                  }}
                 />
               </Badge>
             )}
@@ -786,18 +812,18 @@ export default function TemaPage() {
                     </div>
 
                     {/* Content Detail */}
-                    <div className="flex justify-between items-center px-1 pt-3 sm:pt-4">
-                      <h3 className="font-caveat text-md sm:text-lg font-bold tracking-wide text-foreground line-clamp-1">
+                    <div className="flex flex-col justify-between items-start px-1 pt-3 sm:pt-4">
+                      <h3 className="font-caveat text-sm sm:text-md font-bold tracking-wide text-muted-foreground line-clamp-1">
                         {theme.title}
                       </h3>
-                      <p className="text-[11px] sm:text-xs font-semibold text-primary mt-0.5">
+                      <p className="text-lg sm:text-xl font-semibold text-primary mt-0.5">
                         Rp {theme.price.toLocaleString("id-ID")}
                       </p>
                     </div>
                   </div>
 
                   {/* Actions Button */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -816,7 +842,7 @@ export default function TemaPage() {
                       className="w-full rounded-full bg-primary text-primary-foreground text-[11px] sm:text-xs h-8 sm:h-9"
                     >
                       <Link
-                        href={`/order?theme=${theme.slug}`}
+                        href={`/order?theme=${theme.slug ?? theme.id}`}
                         className="flex items-center justify-center gap-1 sm:gap-1.5"
                       >
                         <ShoppingBag className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -860,7 +886,10 @@ export default function TemaPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onClick={() => {
+                setCurrentPage((prev) => Math.max(prev - 1, 1));
+                scrollToTop();
+              }}
               disabled={currentPage === 1}
               className="rounded-full h-9 w-9 border-border/60"
             >
@@ -874,7 +903,10 @@ export default function TemaPage() {
                 return (
                   <button
                     key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
+                    onClick={() => {
+                      setCurrentPage(pageNum);
+                      scrollToTop();
+                    }}
                     className={`h-9 w-9 rounded-full text-xs font-medium transition-all ${
                       currentPage === pageNum
                         ? "bg-primary text-primary-foreground font-bold shadow-xs"
@@ -891,9 +923,10 @@ export default function TemaPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
+              onClick={() => {
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                scrollToTop();
+              }}
               disabled={currentPage === totalPages}
               className="rounded-full h-9 w-9 border-border/60"
             >

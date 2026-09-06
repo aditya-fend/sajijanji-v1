@@ -20,7 +20,7 @@ export default function Footer() {
       {
         rootMargin: "0px 0px -50px 0px",
         threshold: 0.1,
-      }
+      },
     );
 
     if (footerRef.current) {
@@ -31,6 +31,13 @@ export default function Footer() {
   }, []);
 
   const hiddenClass = "invisible opacity-0 pointer-events-none";
+  const navLinks = [
+    { href: "#beranda", label: "Beranda" },
+    { href: "#tema-undangan", label: "Tema Undangan" },
+    { href: "#testimoni", label: "Testimoni" },
+    { href: "#faq", label: "FAQ" },
+    { href: "/tema", label: "Katalog Tema" },
+  ];
 
   return (
     <footer
@@ -65,30 +72,16 @@ export default function Footer() {
               Navigasi
             </h4>
             <ul className="space-y-2 text-xs md:text-sm text-muted-foreground">
-              <li>
-                <Link
-                  href="#tema-undangan"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Tema Undangan
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#testimoni"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Testimoni
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="#faq"
-                  className="hover:text-foreground transition-colors"
-                >
-                  FAQ
-                </Link>
-              </li>
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

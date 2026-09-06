@@ -17,6 +17,7 @@ const NAV_LINKS = [
   { name: "Tema Undangan", href: "/#tema-undangan" },
   { name: "Testimoni", href: "/#testimonials" },
   { name: "FAQ", href: "/#faq" },
+  { name: "Katalog Tema", href: "/tema" },
 ];
 
 export default function Navbar() {
@@ -46,7 +47,7 @@ export default function Navbar() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 w-full bg-background transition-all dark"
+      className="sticky top-0 z-50 w-full bg-background border-b borfer-border transition-all"
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
         {/* ================= BRAND LOGO & NAME ================= */}
@@ -57,7 +58,7 @@ export default function Navbar() {
             }`}
           >
             <Image
-              src="/logo_dark.avif"
+              src="/logo_light.avif"
               alt="Logo Saji Janji"
               fill
               priority
@@ -66,7 +67,7 @@ export default function Navbar() {
           </div>
 
           <span
-            className={`font-caveat text-2xl font-bold tracking-wide text-foreground ${
+            className={`font-caveat text-2xl font-bold tracking-wide text-muted-foreground ${
               isVisible ? "animate-slide-in-left" : "opacity-0"
             }`}
           >
@@ -92,11 +93,11 @@ export default function Navbar() {
           </nav>
 
           <div
-            className={isVisible ? "animate-zoom-in" : "opacity-0"}
+            className={`flex gap-2 ${isVisible ? "animate-zoom-in" : "opacity-0"}`}
             style={{ animationDelay: "600ms" }}
           >
             <Button className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-transform active:scale-95">
-              <Link href="/tema">Jelajahi Tema</Link>
+              <Link href="/tema">Order Undangan</Link>
             </Button>
           </div>
         </div>
@@ -123,7 +124,7 @@ export default function Navbar() {
               <div className="flex h-full flex-col pt-16">
                 <nav
                   aria-label="Navigasi utama"
-                  className="flex flex-col gap-1 border-t border-border/40 px-6 py-6"
+                  className="flex flex-col gap-1 px-6 border-t border-border"
                 >
                   {NAV_LINKS.map((link) => (
                     <SheetClose
@@ -140,20 +141,6 @@ export default function Navbar() {
                     </SheetClose>
                   ))}
                 </nav>
-
-                <div className="mt-auto border-t border-border/40 p-6">
-                  <SheetClose
-                    nativeButton={false}
-                    render={
-                      <Link
-                        href="/tema"
-                        className="flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98]"
-                      />
-                    }
-                  >
-                    Jelajahi Tema
-                  </SheetClose>
-                </div>
               </div>
             </SheetContent>
           </Sheet>

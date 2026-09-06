@@ -67,7 +67,7 @@ export default function InvitationThemes() {
     >
       <div className="container mx-auto px-4 md:px-8">
         {/* ================= SECTION TITLE & HEADLINE ================= */}
-        <div className="flex flex-col items-center text-center space-y-4 mb-12 md:mb-16">
+        <div className="flex items-center justify-between text-center space-y-4 mb-12 md:mb-16">
           {/* Page Title */}
           <h2
             className={`text-3xl md:text-5xl font-bold tracking-tight ${
@@ -75,11 +75,17 @@ export default function InvitationThemes() {
             }`}
             style={{ animationDelay: "200ms" }}
           >
-            Pilihan Tema{" "}
+            Pilihan{" "}
             <span className="font-caveat font-normal text-4xl md:text-6xl text-neutral-800 dark:text-neutral-200">
-              Eksklusif & Aesthetic
+              Tema
             </span>
           </h2>
+          <Link
+            href="/tema"
+            className="w-full sm:w-auto rounded-full bg-primary px-6 py-2 text-base font-medium text-primary-foreground shadow-lg transition-transform duration-300 active:scale-95 group"
+          >
+            Lihat Semua Tema
+          </Link>
         </div>
 
         {/* ================= RESPONSIVE GRID ================= */}
@@ -87,7 +93,7 @@ export default function InvitationThemes() {
           {THEMES.map((theme, index) => (
             <Card
               key={theme.id}
-              className={`group flex flex-col overflow-hidden rounded-4xl bg-card/60 p-3 sm:p-4 backdrop-blur-sm shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl ${
+              className={`group flex flex-col overflow-hidden rounded-4xl bg-card/60 p-3 sm:p-4 shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl ${
                 isVisible ? "animate-zoom-in" : "opacity-0"
               }`}
               style={{ animationDelay: `${(index + 2) * 150}ms` }}
@@ -108,10 +114,10 @@ export default function InvitationThemes() {
 
               {/* Detail Kartu */}
               <div className="flex flex-1 flex-col justify-between px-1.5 pt-4 pb-2">
-                <div className="space-y-1.5 flex justify-between items-center">
+                <div className="space-y-1.5">
                   {/* Title */}
                   <h3
-                    className={`font-caveat text-2xl md:text-3xl font-bold tracking-wide text-foreground ${
+                    className={`font-caveat text-lg md:text-xl font-bold tracking-wide text-muted-foreground ${
                       isVisible ? "animate-slide-in-left" : "opacity-0"
                     }`}
                   >
@@ -120,7 +126,7 @@ export default function InvitationThemes() {
 
                   {/* Deskripsi */}
                   <p
-                    className={`text-xs md:text-sm text-muted-foreground/90 line-clamp-2 leading-relaxed ${
+                    className={`text-2xl md:text-3xl font-semibold text-foreground line-clamp-2 leading-relaxed ${
                       isVisible ? "animate-slide-in-bottom" : "opacity-0"
                     }`}
                   >
@@ -155,7 +161,7 @@ export default function InvitationThemes() {
                     }`}
                   >
                     <Link
-                      href={`/order?theme=${theme.slug}`}
+                      href={`/order?theme=${theme.slug ?? theme.id}`}
                       className="flex items-center justify-center gap-1.5 text-xs font-medium"
                     >
                       <ShoppingBag className="h-3.5 w-3.5" />
