@@ -9,12 +9,15 @@ import {
   Type,
   ZoomIn,
   ZoomOut,
+  Play,
 } from "lucide-react";
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
-import type { CanvasElementType, ShapeType } from "@/store/useEditorStore";
-
-export type CanvasTool = "cursor" | "text" | "image" | "shape";
+import type {
+  CanvasElementType,
+  CanvasTool,
+  ShapeType,
+} from "@/store/useEditorStore";
 
 interface TloatingToolbarControlsProps {
   zoom: number;
@@ -28,6 +31,7 @@ interface TloatingToolbarControlsProps {
   onSelectCursor: () => void;
   onAddContainer: (type: CanvasElementType) => void;
   canAddElements: boolean;
+  onTogglePreview?: () => void;
 }
 
 const iconButtonClassName =
@@ -45,6 +49,7 @@ export default function TloatingToolbarControls({
   onSelectCursor,
   onAddContainer,
   canAddElements,
+  onTogglePreview,
 }: TloatingToolbarControlsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isShapeMenuOpen, setIsShapeMenuOpen] = useState(false);
@@ -199,6 +204,23 @@ export default function TloatingToolbarControls({
       >
         <RotateCcw className="h-3.5 w-3.5" />
       </Button>
+
+      {onTogglePreview && (
+        <>
+          <div className="mx-1 h-4 w-px bg-border/50" />
+          <Button
+            size="sm"
+            variant="default"
+            className="h-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs px-3 flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+            onClick={onTogglePreview}
+            title="Lihat Hasil Akhir (Play Preview)"
+          >
+            <Play className="h-3.5 w-3.5 fill-current" />
+            <span>Play</span>
+          </Button>
+        </>
+      )}
+
       <input
         ref={fileInputRef}
         type="file"

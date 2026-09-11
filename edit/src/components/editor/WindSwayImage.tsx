@@ -1,6 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 interface WindSwayImageProps {
   src: string;
@@ -10,130 +11,187 @@ interface WindSwayImageProps {
   duration?: number;
   intensity?: number;
   direction?: 1 | -1;
-  segments?: number;
   objectFit?: "cover" | "contain" | "fill";
   borderRadius?: number;
+  motionBlur?: boolean;
+  delay?: number;
+  flipX?: boolean;
+  flipY?: boolean;
 }
 
 export default function WindSwayImage({
   src,
   alt,
   className = "",
-  amplitude = 18,
-  duration = 4.8,
-  intensity = 1,
+  amplitude = 22,
+  duration = 4.2,
+  intensity = 1.25,
   direction = 1,
-  segments = 8,
-  objectFit = "cover",
+  objectFit = "contain",
   borderRadius = 0,
+  motionBlur = true,
+  delay = 0.85,
+  flipX = false,
+  flipY = false,
 }: WindSwayImageProps) {
-  const safeSegments = Math.max(4, Math.min(12, segments));
-  const strips = Array.from({ length: safeSegments }, (_, index) => {
-    const normalized = index / (safeSegments - 1);
-    const influence = normalized ** 1.35;
-    const shift = amplitude * intensity * influence * direction;
-    const topShift = shift * 1.08;
-    const middleShift = shift * 0.62;
-    const returnShift = shift * -0.78;
-    const recoveryShift = shift * -0.28;
-    const top = `${index * (100 / safeSegments)}%`;
-    const height = `${100 / safeSegments + 0.35}%`;
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const stemRef = useRef<HTMLDivElement>(null);
 
-    return (
-      <span
-        key={index}
-        aria-hidden="true"
-        className="wind-sway-strip"
-        style={
+  useEffect(() => {
+    const container = containerRef.current;
+    const stem = stemRef.current;
+    if (!container || !stem) return;
+
+    let tl: gsap.core.Timeline | null = null;
+    let delayTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const effectiveDirection = (flipX ? -1 : 1) * direction;
+    const origin = flipY ? "50% 0%" : "50% 100%";
+
+    const startAnimation = () => {
+      if (tl) tl.kill();
+      gsap.killTweensOf(stem);
+
+      gsap.set(stem, {
+        x: 0,
+        y: 0,
+        rotation: 0,
+        skewX: 0,
+        scaleY: 1,
+        filter: "blur(0px)",
+        transformOrigin: origin,
+        force3D: true,
+      });
+
+      const angle = (amplitude / 18) * 5.2 * intensity * effectiveDirection;
+      const skew = (amplitude / 18) * 2.2 * intensity * effectiveDirection;
+      const shift = (amplitude / 18) * 6.5 * intensity * effectiveDirection;
+      const maxBlur = motionBlur ? Math.min(2.2, 0.9 * intensity) : 0;
+      const period = Math.max(1.8, duration);
+
+      tl = gsap.timeline({
+        repeat: -1,
+        yoyo: true,
+        defaults: { ease: "sine.inOut" },
+      });
+
+      // 1. Ayunan hembusan angin utama (bergerak cepat di tengah dengan motion blur, berhenti di puncak)
+      tl.to(
+        stem,
+        {
+          rotation: angle,
+          skewX: skew,
+          x: shift,
+          scaleY: 0.988,
+          duration: period * 0.48,
+        },
+        0,
+      )
+        .fromTo(
+          stem,
+          { filter: `blur(${maxBlur}px)` },
+          { filter: "blur(0px)", duration: period * 0.24, ease: "power2.out" },
+          period * 0.24,
+        )
+        // 2. Ayunan balik pegas elastis (inersia melewai titik setimbang dengan motion blur halus)
+        .to(stem, {
+          rotation: -angle * 0.72,
+          skewX: -skew * 0.65,
+          x: -shift * 0.68,
+          scaleY: 0.994,
+          duration: period * 0.52,
+        })
+        .fromTo(
+          stem,
+          { filter: "blur(0px)" },
           {
-            top,
-            height,
-            backgroundImage: `url("${src}")`,
-            backgroundSize: `100% ${safeSegments * 100}%`,
-            backgroundPosition: `center ${index * (100 / (safeSegments - 1))}%`,
-            objectFit,
-            animationDuration: `${duration}s`,
-            "--wind-a": `${middleShift}px`,
-            "--wind-b": `${topShift}px`,
-            "--wind-c": `${returnShift}px`,
-            "--wind-d": `${recoveryShift}px`,
-          } as CSSProperties
+            filter: `blur(${maxBlur * 0.8}px)`,
+            duration: period * 0.24,
+            ease: "power2.in",
+          },
+          `-=${period * 0.44}`,
+        )
+        .to(
+          stem,
+          {
+            filter: "blur(0px)",
+            duration: period * 0.24,
+            ease: "power2.out",
+          },
+          `-=${period * 0.2}`,
+        );
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          // Berikan jeda/delay agar animasi mount selesai secara mulus terlebih dahulu
+          delayTimer = setTimeout(() => {
+            startAnimation();
+          }, Math.max(0, delay * 1000));
+        } else {
+          if (delayTimer) clearTimeout(delayTimer);
+          if (tl) tl.pause();
         }
-      />
+      },
+      { threshold: 0.15 },
     );
-  });
+
+    observer.observe(container);
+
+    return () => {
+      if (delayTimer) clearTimeout(delayTimer);
+      if (tl) tl.kill();
+      gsap.killTweensOf(stem);
+      observer.disconnect();
+    };
+  }, [amplitude, duration, intensity, direction, motionBlur, delay, flipX, flipY]);
 
   return (
     <span
+      ref={containerRef}
       role="img"
       aria-label={alt}
-      className={`wind-sway-image ${className}`}
-      style={{ borderRadius }}
+      className={className}
+      style={{
+        position: "relative",
+        display: "block",
+        width: "100%",
+        height: "100%",
+        overflow: "visible",
+        borderRadius,
+      }}
     >
-      {strips}
-      <style jsx>{`
-        .wind-sway-image {
-          position: relative;
-          display: block;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          isolation: isolate;
-        }
-
-        .wind-sway-strip {
-          position: absolute;
-          left: -24px;
-          width: calc(100% + 48px);
-          display: block;
-          background-repeat: no-repeat;
-          transform: translate3d(0, 0, 0);
-          transform-origin: center bottom;
-          will-change: transform;
-          animation-name: wind-sway;
-          animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-          animation-iteration-count: infinite;
-          animation-direction: alternate;
-        }
-
-        @keyframes wind-sway {
-          0% {
-            transform: translate3d(0, 0, 0);
-          }
-          16% {
-            transform: translate3d(var(--wind-a), 0, 0);
-          }
-          34% {
-            transform: translate3d(var(--wind-b), 0, 0);
-          }
-          50% {
-            transform: translate3d(calc(var(--wind-b) * 0.58), 0, 0);
-          }
-          68% {
-            transform: translate3d(var(--wind-c), 0, 0);
-          }
-          84% {
-            transform: translate3d(var(--wind-d), 0, 0);
-          }
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-        }
-
-        @media (max-width: 640px) {
-          .wind-sway-strip {
-            left: -14px;
-            width: calc(100% + 28px);
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .wind-sway-strip {
-            animation: none;
-            transform: translate3d(0, 0, 0);
-          }
-        }
-      `}</style>
+      <div
+        ref={stemRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          transformOrigin: "50% 100%",
+          willChange: "transform, filter",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+        }}
+      >
+        <img
+          src={src}
+          alt={alt}
+          draggable={false}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit,
+            borderRadius,
+            display: "block",
+            pointerEvents: "none",
+            userSelect: "none",
+            transform: [flipX ? "scaleX(-1)" : "", flipY ? "scaleY(-1)" : ""]
+              .filter(Boolean)
+              .join(" ") || undefined,
+          }}
+        />
+      </div>
     </span>
   );
 }
