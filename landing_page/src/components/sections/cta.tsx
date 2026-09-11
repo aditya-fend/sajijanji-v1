@@ -36,11 +36,11 @@ export default function CTASection() {
     <section
       ref={sectionRef}
       id="cta"
-      className="relative overflow-hidden py-20 md:py-28 bg-gradient-to-b from-background via-secondary/20 to-background text-foreground"
+      className="relative overflow-hidden py-20 md:py-28 from-background via-secondary/20 to-background text-foreground"
     >
       <div className="container relative z-10 mx-auto px-4 md:px-8 max-w-4xl">
         <div
-          className={`flex flex-col items-center text-center space-y-6 rounded-3xl border border-border/50 bg-card-foreground p-8 md:p-14 backdrop-blur-md shadow-sm ${
+          className={`flex flex-col items-center text-center space-y-6 rounded-4xl border border-border/50 bg-card-foreground p-8 md:p-14 backdrop-blur-md shadow-sm ${
             isVisible ? "animate-zoom-in" : hiddenClass
           }`}
         >
@@ -79,14 +79,14 @@ export default function CTASection() {
             {/* Primary Button */}
             <Button
               size="lg"
-              className="w-full sm:w-auto rounded-full bg-primary text-primary-foreground px-8 font-medium shadow-xs transition-all duration-300 hover:shadow-md active:scale-95"
+              className="w-fit sm:w-auto rounded-full bg-primary text-primary-foreground px-8 font-medium shadow-xs transition-all duration-300 hover:shadow-md active:scale-95"
             >
               <Link
                 href="#tema-undangan"
                 className="flex items-center justify-center gap-2"
               >
                 <ShoppingBag className="h-4 w-4" />
-                <span>Buat Undangan Sekarang</span>
+                <span>Order Sekarang</span>
               </Link>
             </Button>
           </div>

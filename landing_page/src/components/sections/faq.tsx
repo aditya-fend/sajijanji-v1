@@ -57,7 +57,7 @@ export default function FAQSection() {
       {
         rootMargin: "0px 0px -50px 0px",
         threshold: 0.15,
-      }
+      },
     );
 
     if (sectionRef.current) {
@@ -78,7 +78,6 @@ export default function FAQSection() {
       <div className="container mx-auto px-4 md:px-8 max-w-4xl">
         {/* ================= SECTION TITLE & HEADLINE ================= */}
         <div className="flex flex-col items-center text-center space-y-4 mb-12 md:mb-16">
-
           {/* Page Title */}
           <h2
             className={`text-3xl md:text-5xl font-bold tracking-tight ${
@@ -86,21 +85,11 @@ export default function FAQSection() {
             }`}
             style={{ animationDelay: "200ms" }}
           >
-            Pertanyaan yang{" "}
             <span className="font-caveat font-normal text-4xl md:text-6xl text-neutral-800 dark:text-neutral-200">
-              Sering Diajukan
+              Pertanyaan{" "}
             </span>
+            Sering Diajukan
           </h2>
-
-          {/* Page Description */}
-          <p
-            className={`max-w-xl text-sm md:text-base text-muted-foreground ${
-              isVisible ? "animate-slide-in-bottom" : hiddenClass
-            }`}
-            style={{ animationDelay: "300ms" }}
-          >
-            Temukan jawaban lengkap atas hal-hal yang sering ditanyakan mengenai layanan undangan digital kami.
-          </p>
         </div>
 
         {/* ================= ACCORDION FAQ ================= */}

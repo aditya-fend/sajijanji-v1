@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Caveat } from "next/font/google";
-import "./globals.css";
+import "@/app/globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/shared/navbar";
 import Footer from "@/components/shared/footer";
+import ScrollToTop from "@/components/shared/scroll-to-top";
 
 // Font untuk Body (Geist Sans)
 const geistSans = Geist({
@@ -19,7 +20,8 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
   title: "Undangan Digital Elegan & Aesthetic",
-  description: "Jasa pembuatan undangan digital eksklusif dengan desain elegan dan modern.",
+  description:
+    "Jasa pembuatan undangan digital eksklusif dengan desain elegan dan modern.",
 };
 
 export default function RootLayout({
@@ -34,6 +36,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground selection:bg-neutral-800 selection:text-neutral-100">
         <TooltipProvider>
+          <ScrollToTop />
           <Navbar />
           {children}
           <Footer />
