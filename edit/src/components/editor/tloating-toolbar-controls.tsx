@@ -11,6 +11,7 @@ import {
   ZoomOut,
   Play,
   Gift,
+  MailOpen,
 } from "lucide-react";
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,13 @@ import type {
   CanvasElementType,
   CanvasTool,
   ShapeType,
+  MockupType,
 } from "@/store/useEditorStore";
 
 interface TloatingToolbarControlsProps {
   zoom: number;
   activeTool: CanvasTool;
+  activeMockup: MockupType;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -34,6 +37,7 @@ interface TloatingToolbarControlsProps {
   canAddElements: boolean;
   onTogglePreview?: () => void;
   onAddGiftButton: () => void;
+  onAddCoverButton: () => void;
 }
 
 const iconButtonClassName =
@@ -42,6 +46,7 @@ const iconButtonClassName =
 export default function TloatingToolbarControls({
   zoom,
   activeTool,
+  activeMockup,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -53,6 +58,7 @@ export default function TloatingToolbarControls({
   canAddElements,
   onTogglePreview,
   onAddGiftButton,
+  onAddCoverButton,
 }: TloatingToolbarControlsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isShapeMenuOpen, setIsShapeMenuOpen] = useState(false);
@@ -92,6 +98,7 @@ export default function TloatingToolbarControls({
         variant="ghost"
         className={iconButtonClassName}
         onClick={() => setIsContainerMenuOpen((open) => !open)}
+        disabled={!canAddElements}
         title="Tambah container"
         aria-label="Tambah container"
       >
@@ -154,17 +161,30 @@ export default function TloatingToolbarControls({
       >
         <Shapes className="h-4 w-4" />
       </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        className={iconButtonClassName}
-        onClick={onAddGiftButton}
-        disabled={!canAddElements}
-        title="Tambah tombol gift"
-        aria-label="Tambah tombol gift"
-      >
-        <Gift className="h-4 w-4" />
-      </Button>
+      {activeMockup === "cover" && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className={iconButtonClassName}
+          onClick={onAddCoverButton}
+          title="Tambah tombol buka undangan"
+          aria-label="Tambah tombol buka undangan"
+        >
+          <MailOpen className="h-4 w-4" />
+        </Button>
+      )}
+      {activeMockup === "gift-modal" && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className={iconButtonClassName}
+          onClick={onAddGiftButton}
+          title="Tambah tombol gift"
+          aria-label="Tambah tombol gift"
+        >
+          <Gift className="h-4 w-4" />
+        </Button>
+      )}
       {isShapeMenuOpen && canAddElements && (
         <div className="absolute bottom-12 left-20 grid grid-cols-2 gap-1 rounded-xl border border-border/50 bg-card p-1.5 shadow-xl">
           {shapes.map((shape) => (

@@ -22,6 +22,13 @@ import WindSwayImage from "@/components/editor/WindSwayImage";
 import AnimatedText from "@/components/editor/AnimatedText";
 import OpenInvitationButton from "@/components/editor/OpenInvitationButton";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   useEditorStore,
   type CanvasElementType,
   type ShapeType,
@@ -75,8 +82,20 @@ export default function Canvas() {
     | { type: "image"; file: File }
     | { type: "shape"; shape: ShapeType }
     | { type: "gift" }
+    | { type: "cover-button" }
     | null
   >(null);
+  const [coverButtonAdded, setCoverButtonAdded] = useState(false);
+  const [giftButtonAdded, setGiftButtonAdded] = useState(false);
+  const [codeEditorTarget, setCodeEditorTarget] = useState<
+    "cover" | "gift" | null
+  >(null);
+  const [coverButtonCode, setCoverButtonCode] = useState(
+    '<button className="w-full bg-red-500">Buka Undangan</button>',
+  );
+  const [giftButtonCode, setGiftButtonCode] = useState(
+    '<button className="w-full bg-red-500">Kirim Gift</button>',
+  );
 
   const selectedContainer = elements.find(
     (element) =>
@@ -329,6 +348,26 @@ export default function Canvas() {
     setActiveTool("cursor");
     setPendingPlacement(null);
     selectElement(null);
+  };
+
+  const getTailwindClassName = (code: string) =>
+    code.match(/className\s*[:=]\s*["'{]([^"'}]+)["'}]/)?.[1] ?? "";
+
+  const handleMockupClick = (
+    event: PointerEvent<HTMLDivElement>,
+    target: "cover" | "gift",
+  ) => {
+    if (
+      (target === "cover" && pendingPlacement?.type !== "cover-button") ||
+      (target === "gift" && pendingPlacement?.type !== "gift")
+    ) {
+      return;
+    }
+    event.stopPropagation();
+    if (target === "cover") setCoverButtonAdded(true);
+    else setGiftButtonAdded(true);
+    setPendingPlacement(null);
+    setActiveTool("cursor");
   };
 
   const getFramePosition = (event: PointerEvent<HTMLDivElement>) => {
@@ -800,6 +839,7 @@ export default function Canvas() {
         <TloatingToolbarControls
           zoom={zoom}
           activeTool={activeTool}
+          activeMockup={activeMockup}
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
           onResetZoom={resetZoom}
@@ -820,7 +860,11 @@ export default function Canvas() {
             setPendingPlacement({ type: "gift" });
             setActiveTool("button");
           }}
-          canAddElements={isMounted}
+          onAddCoverButton={() => {
+            setPendingPlacement({ type: "cover-button" });
+            setActiveTool("button");
+          }}
+          canAddElements={isMounted && activeMockup === "invitation"}
           onSelectCursor={handleCanvasClick}
           onTogglePreview={() => {
             setIsCoverVisible(true);
@@ -1059,35 +1103,21 @@ export default function Canvas() {
 
             {isPreviewMode && (
               <div className={`absolute inset-x-0 top-0 z-40 h-[720px] overflow-hidden bg-stone-950 transition-transform duration-700 ease-in-out ${isCoverVisible ? "translate-y-0" : "-translate-y-full"}`}>
-                <img
-                  src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=900&auto=format&fit=crop&q=80"
-                  alt="Mempelai"
-                />
-                <div>
-                  <p>The Wedding Of</p>
-                  <h3>Alya & Raka</h3>
-                  <p>Kepada Yth.</p>
-                  <p>Nama Penerima Undangan</p>
-                  <button type="button" onClick={() => setIsCoverVisible(false)}>
+                {coverButtonAdded && (
+                  <button
+                    type="button"
+                    className={getTailwindClassName(coverButtonCode)}
+                    onClick={() => setIsCoverVisible(false)}
+                  >
                     Buka Undangan
                   </button>
-                </div>
+                )}
               </div>
             )}
 
             {isPreviewMode && isGiftModalOpen && (
               <div className="absolute inset-x-0 top-0 z-50 flex h-[720px] items-center justify-center bg-black/60 px-6 backdrop-blur-sm">
-                <div>
-                  <Gift />
-                  <h3>Kirim Wedding Gift</h3>
-                  <p>Doa dan perhatian Anda sangat berarti bagi kami.</p>
-                  <div>
-                    <p>BCA</p>
-                    <p>123 456 7890</p>
-                    <p>Alya & Raka</p>
-                  </div>
-                  <button type="button" onClick={() => setIsGiftModalOpen(false)}>Tutup</button>
-                </div>
+                <button type="button" onClick={() => setIsGiftModalOpen(false)}>Tutup</button>
               </div>
             )}
 
@@ -1099,32 +1129,72 @@ export default function Canvas() {
         {/* Mockup Cover */}
         {activeMockup === "cover" && <div className="flex shrink-0 flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Cover</span>
-          <div className="relative h-[720px] w-[360px] overflow-hidden rounded-3xl border border-border/60 bg-stone-950 shadow-2xl">
-            <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=900&auto=format&fit=crop&q=80" alt="Foto kedua mempelai" />
-            <div>
-              <p>The Wedding Of</p>
-              <h3>Alya & Raka</h3>
-              <p>Kepada Yth.</p>
-              <p>Nama Penerima Undangan</p>
-              <button type="button" onClick={() => setIsCoverVisible(false)}>Buka Undangan</button>
-            </div>
+          <div
+            className={`relative h-[720px] w-[360px] overflow-hidden rounded-3xl border border-border/60 bg-stone-950 shadow-2xl ${pendingPlacement?.type === "cover-button" ? "cursor-copy" : ""}`}
+            onClick={(event) => handleMockupClick(event, "cover")}
+          >
+            {coverButtonAdded && (
+              <button
+                type="button"
+                className={getTailwindClassName(coverButtonCode)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setCodeEditorTarget("cover");
+                }}
+              >
+                Buka Undangan
+              </button>
+            )}
           </div>
         </div>}
 
         {/* Mockup Gift Modal */}
         {activeMockup === "gift-modal" && <div className="flex shrink-0 flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gift Modal</span>
-          <div className="flex h-[720px] w-[360px] items-center justify-center rounded-3xl border border-border/60 bg-black/60 p-6 shadow-2xl">
-            <div>
-              <Gift />
-              <h3>Kirim Wedding Gift</h3>
-              <p>Doa dan perhatian Anda sangat berarti bagi kami.</p>
-              <div><p>BCA</p><p>123 456 7890</p><p>Alya & Raka</p></div>
-              <button type="button">Tutup</button>
-            </div>
+          <div
+            className={`flex h-[720px] w-[360px] items-center justify-center rounded-3xl border border-border/60 bg-black/60 p-6 shadow-2xl ${pendingPlacement?.type === "gift" ? "cursor-copy" : ""}`}
+            onClick={(event) => handleMockupClick(event, "gift")}
+          >
+            {giftButtonAdded && (
+              <button
+                type="button"
+                className={getTailwindClassName(giftButtonCode)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setCodeEditorTarget("gift");
+                }}
+              >
+                Kirim Gift
+              </button>
+            )}
           </div>
         </div>}
       </div>
+
+      <Dialog
+        open={codeEditorTarget !== null}
+        onOpenChange={(open) => !open && setCodeEditorTarget(null)}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>
+              Styling Tombol {codeEditorTarget === "cover" ? "Buka Undangan" : "Gift"}
+            </DialogTitle>
+            <DialogDescription>
+              Gunakan JSX dengan className Tailwind, misalnya <code>{'<button className="w-full bg-red-500">...'}</code>.
+            </DialogDescription>
+          </DialogHeader>
+          <textarea
+            value={codeEditorTarget === "cover" ? coverButtonCode : giftButtonCode}
+            onChange={(event) => {
+              if (codeEditorTarget === "cover") setCoverButtonCode(event.target.value);
+              else setGiftButtonCode(event.target.value);
+            }}
+            className="min-h-32 w-full rounded-lg border border-border bg-muted p-3 font-mono text-xs"
+            spellCheck={false}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
