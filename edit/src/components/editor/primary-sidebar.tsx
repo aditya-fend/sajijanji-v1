@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, LayoutTemplate, Layers } from "lucide-react";
+import { ArrowLeft, LayoutTemplate, Layers, PanelsTopLeft } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -57,6 +57,28 @@ export default function PrimarySidebar() {
             />
             <TooltipContent side="right" className="text-xs">
               Pilih Template
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Section Settings Icon */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  onClick={() => onTabChange("sections")}
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
+                    activeTab === "sections"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  }`}
+                >
+                  <PanelsTopLeft className="h-5 w-5" />
+                </button>
+              }
+            />
+            <TooltipContent side="right" className="text-xs">
+              Pengaturan Section
             </TooltipContent>
           </Tooltip>
 

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
-export type SidebarTab = "templates" | "layers";
+export type SidebarTab = "templates" | "layers" | "sections";
+export type MockupType = "invitation" | "cover" | "gift-modal";
 export type CanvasTool = "cursor" | "text" | "image" | "shape" | "button";
 export type CanvasElementType = "container" | "text" | "image" | "shape" | "button";
 export type ShapeType = "line" | "circle" | "square" | "triangle" | "star";
@@ -20,7 +21,7 @@ export type ButtonIconType =
   | "music"
   | "chevron-down"
   | "none";
-export type ButtonActionType = "scroll-to-section" | "url";
+export type ButtonActionType = "scroll-to-section" | "url" | "gift-modal";
 export type AnimationName =
   | "none"
   | "fade-up"
@@ -123,6 +124,7 @@ export interface EditorLayer {
 
 interface EditorState {
   activeTab: SidebarTab;
+  activeMockup: MockupType;
   selectedElementId: string | null;
   activeTool: CanvasTool;
   zoom: number;
@@ -144,6 +146,7 @@ interface EditorState {
   bgImageFixed: boolean; // Parallax / Sticky to viewport
   pendingImageFile: File | null;
   setActiveTab: (tab: SidebarTab) => void;
+  setActiveMockup: (mockup: MockupType) => void;
   selectElement: (id: string | null) => void;
   setActiveTool: (tool: CanvasTool) => void;
   setZoom: (zoom: number) => void;
@@ -218,13 +221,14 @@ const initialLayers: EditorLayer[] = [];
 
 export const useEditorStore = create<EditorState>((set) => ({
   activeTab: "templates",
+  activeMockup: "invitation",
   selectedElementId: null,
   activeTool: "cursor",
   zoom: 100,
   searchQuery: "",
   elements: initialElements,
   layers: initialLayers,
-  sectionsCount: 3,
+  sectionsCount: 10,
   isPreviewMode: false,
   fontSize: [24],
   opacity: [100],
@@ -241,6 +245,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   bgImageFixed: false,
   pendingImageFile: null,
   setActiveTab: (activeTab) => set({ activeTab }),
+  setActiveMockup: (activeMockup) =>
+    set({ activeMockup, selectedElementId: null }),
   selectElement: (selectedElementId) => set({ selectedElementId }),
   setActiveTool: (activeTool) => set({ activeTool }),
   setZoom: (zoom) => set({ zoom: Math.min(Math.max(zoom, 50), 150) }),

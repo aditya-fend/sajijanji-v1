@@ -10,6 +10,7 @@ import {
   ZoomIn,
   ZoomOut,
   Play,
+  Gift,
 } from "lucide-react";
 import { useRef, useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ interface TloatingToolbarControlsProps {
   onAddContainer: (type: CanvasElementType) => void;
   canAddElements: boolean;
   onTogglePreview?: () => void;
+  onAddGiftButton: () => void;
 }
 
 const iconButtonClassName =
@@ -50,6 +52,7 @@ export default function TloatingToolbarControls({
   onAddContainer,
   canAddElements,
   onTogglePreview,
+  onAddGiftButton,
 }: TloatingToolbarControlsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isShapeMenuOpen, setIsShapeMenuOpen] = useState(false);
@@ -150,6 +153,17 @@ export default function TloatingToolbarControls({
         aria-label="Tambah shape"
       >
         <Shapes className="h-4 w-4" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        className={iconButtonClassName}
+        onClick={onAddGiftButton}
+        disabled={!canAddElements}
+        title="Tambah tombol gift"
+        aria-label="Tambah tombol gift"
+      >
+        <Gift className="h-4 w-4" />
       </Button>
       {isShapeMenuOpen && canAddElements && (
         <div className="absolute bottom-12 left-20 grid grid-cols-2 gap-1 rounded-xl border border-border/50 bg-card p-1.5 shadow-xl">

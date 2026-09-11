@@ -15,8 +15,7 @@ import {
   Play,
   RotateCcw,
   ArrowLeft,
-  Sparkles,
-  Smartphone,
+  Gift,
 } from "lucide-react";
 import TloatingToolbarControls from "@/components/editor/tloating-toolbar-controls";
 import WindSwayImage from "@/components/editor/WindSwayImage";
@@ -41,6 +40,8 @@ export default function Canvas() {
   );
   const zoom = useEditorStore((state) => state.zoom);
   const activeTool = useEditorStore((state) => state.activeTool);
+  const activeMockup = useEditorStore((state) => state.activeMockup);
+  const setActiveMockup = useEditorStore((state) => state.setActiveMockup);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const bgColor = useEditorStore((state) => state.bgColor);
   const bgImage = useEditorStore((state) => state.bgImage);
@@ -57,12 +58,6 @@ export default function Canvas() {
   const zoomOut = useEditorStore((state) => state.zoomOut);
   const resetZoom = useEditorStore((state) => state.resetZoom);
   const addElement = useEditorStore((state) => state.addElement);
-  const addOpenInvitationButton = useEditorStore(
-    (state) => state.addOpenInvitationButton,
-  );
-  const addOpeningSectionLayout = useEditorStore(
-    (state) => state.addOpeningSectionLayout,
-  );
   const addContainer = useEditorStore((state) => state.addContainer);
   const setActiveTool = useEditorStore((state) => state.setActiveTool);
   const selectElement = useEditorStore((state) => state.selectElement);
@@ -70,11 +65,18 @@ export default function Canvas() {
   const deleteElement = useEditorStore((state) => state.deleteElement);
   const duplicateElement = useEditorStore((state) => state.duplicateElement);
   const sectionsCount = useEditorStore((state) => state.sectionsCount);
-  const addSection = useEditorStore((state) => state.addSection);
-  const removeSection = useEditorStore((state) => state.removeSection);
   const isPreviewMode = useEditorStore((state) => state.isPreviewMode);
   const setIsPreviewMode = useEditorStore((state) => state.setIsPreviewMode);
   const [previewKey, setPreviewKey] = useState(0);
+  const [isCoverVisible, setIsCoverVisible] = useState(true);
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
+  const [pendingPlacement, setPendingPlacement] = useState<
+    | { type: "text" }
+    | { type: "image"; file: File }
+    | { type: "shape"; shape: ShapeType }
+    | { type: "gift" }
+    | null
+  >(null);
 
   const selectedContainer = elements.find(
     (element) =>
@@ -325,7 +327,52 @@ export default function Canvas() {
 
   const handleCanvasClick = () => {
     setActiveTool("cursor");
+    setPendingPlacement(null);
     selectElement(null);
+  };
+
+  const getFramePosition = (event: PointerEvent<HTMLDivElement>) => {
+    const frame = frameRef.current;
+    if (!frame) return null;
+    const rect = frame.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+    return { xPct: (x / rect.width) * 100, yPct: (y / rect.height) * 100 };
+  };
+
+  const handleFrameClick = (event: PointerEvent<HTMLDivElement>) => {
+    if (!pendingPlacement) {
+      handleCanvasClick();
+      return;
+    }
+
+    const position = getFramePosition(event);
+    if (!position) return;
+    event.stopPropagation();
+
+    const elementPosition = {
+      top: `${position.yPct.toFixed(2)}%`,
+      left: `${position.xPct.toFixed(2)}%`,
+    };
+
+    if (pendingPlacement.type === "image") {
+      handleAddImage(pendingPlacement.file, position);
+    } else if (pendingPlacement.type === "shape") {
+      handleAddShape(pendingPlacement.shape, elementPosition);
+    } else if (pendingPlacement.type === "gift") {
+      addElement("button", {
+        name: "Tombol Gift",
+        buttonText: "Kirim Gift",
+        buttonIcon: "heart",
+        buttonAction: "gift-modal",
+        position: elementPosition,
+      });
+    } else {
+      addElement("text", { position: elementPosition });
+    }
+
+    setPendingPlacement(null);
+    setActiveTool("cursor");
   };
 
   const handleFramePointerMove = (e: PointerEvent<HTMLDivElement>) => {
@@ -444,12 +491,16 @@ export default function Canvas() {
     img.src = objectUrl;
   };
 
-  const handleAddShape = (shape: ShapeType) => {
+  const handleAddShape = (
+    shape: ShapeType,
+    position?: { top: string; left: string },
+  ) => {
     addElement("shape", {
       shape,
       name: `${shape} shape`,
       positionMode: selectedContainer ? "relative" : "absolute",
       parentId: selectedContainer?.id,
+      position,
     });
   };
 
@@ -566,7 +617,9 @@ export default function Canvas() {
               pulse={el.buttonPulse ?? true}
               className={el.style}
               onClick={() => {
-                if (el.buttonAction === "url" && el.buttonUrl) {
+                if (el.buttonAction === "gift-modal") {
+                  setIsGiftModalOpen(true);
+                } else if (el.buttonAction === "url" && el.buttonUrl) {
                   window.open(el.buttonUrl, "_blank");
                 } else {
                   scrollToSection(el.buttonTargetSection ?? 1);
@@ -751,90 +804,73 @@ export default function Canvas() {
           onZoomOut={zoomOut}
           onResetZoom={resetZoom}
           onAddText={() => {
-            addElement("text", {
-              positionMode: selectedContainer ? "relative" : "absolute",
-              parentId: selectedContainer?.id,
-            });
+            setPendingPlacement({ type: "text" });
+            setActiveTool("text");
           }}
-          onAddImage={handleAddImage}
-          onAddShape={handleAddShape}
+          onAddImage={(file) => {
+            setPendingPlacement({ type: "image", file });
+            setActiveTool("image");
+          }}
+          onAddShape={(shape) => {
+            setPendingPlacement({ type: "shape", shape });
+            setActiveTool("shape");
+          }}
           onAddContainer={handleAddContainer}
+          onAddGiftButton={() => {
+            setPendingPlacement({ type: "gift" });
+            setActiveTool("button");
+          }}
           canAddElements={isMounted}
-          onSelectCursor={() => setActiveTool("cursor")}
-          onTogglePreview={() => setIsPreviewMode(true)}
+          onSelectCursor={handleCanvasClick}
+          onTogglePreview={() => {
+            setIsCoverVisible(true);
+            setIsGiftModalOpen(false);
+            setIsPreviewMode(true);
+          }}
         />
       )}
 
-      {/* Quick Floating Section Navigator Beside Mockup */}
-      <div className="absolute right-6 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5 p-2 rounded-2xl bg-neutral-900/85 border border-border/50 backdrop-blur-md shadow-2xl">
-        <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
-          Halaman
-        </span>
-        {Array.from({ length: sectionsCount }, (_, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              scrollToSection(index);
-            }}
-            title={`Scroll ke Section ${index + 1}`}
-            className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-mono font-medium transition-all hover:scale-105 active:scale-95 bg-neutral-800 text-neutral-300 hover:bg-primary/20 hover:text-primary hover:border-primary/40 border border-transparent cursor-pointer"
+      <div className="relative z-10 flex w-full flex-col items-center gap-2 px-10 py-8">
+        <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Mockup
+          <select
+            value={activeMockup}
+            onChange={(event) =>
+              setActiveMockup(event.target.value as "invitation" | "cover" | "gift-modal")
+            }
+            className="rounded-md border border-border bg-card px-2 py-1 text-xs normal-case tracking-normal text-foreground"
           >
-            {index + 1}
-          </button>
-        ))}
-        {!isPreviewMode && (
-          <>
-            <div className="w-4 h-px bg-border/40 my-1" />
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                addSection();
-              }}
-              title="Tambah Section Baru"
-              className="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold transition-all bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 cursor-pointer hover:scale-105 active:scale-95"
-            >
-              +
-            </button>
-          </>
-        )}
-      </div>
+            <option value="invitation">Undangan</option>
+            <option value="cover">Cover</option>
+            <option value="gift-modal">Gift Modal</option>
+          </select>
+        </label>
 
-      {/* Frame Mobile Undangan */}
-      <div
-        className="transition-transform duration-200 ease-out relative cursor-default"
-        style={{ transform: `scale(${zoom / 100})` }}
-      >
+        {/* Mockup Undangan */}
+        {activeMockup === "invitation" && <div className="flex shrink-0 flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Undangan
+          </span>
+          <div
+            className="transition-transform duration-200 ease-out relative cursor-default origin-top-left"
+            style={{ transform: `scale(${zoom / 100})` }}
+          >
         {/* Mockup Frame Undangan (Mobile Aspect Ratio 9:16 Scrollable) */}
         <div
           ref={scrollContainerRef}
           className="w-[360px] h-[720px] border border-border/60 rounded-3xl shadow-2xl overflow-y-auto overflow-x-hidden relative border-amber-500/20 scroll-smooth [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.3)_transparent]"
           style={{ backgroundColor: bgColor }}
         >
-          {/* Header Bar Mockup - Sticky on top */}
-          <div className="sticky top-0 left-0 right-0 h-7 bg-black/85 backdrop-blur-md z-30 flex items-center justify-between px-4 pointer-events-auto border-b border-white/5">
-            <span className="text-[10px] text-muted-foreground font-mono">
-              09:41
-            </span>
-            <div className="flex gap-1.5 items-center">
-              <span className="text-[9px] text-amber-400 font-mono font-medium px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/20">
-                {sectionsCount} Sections
-              </span>
-              <div className="w-2 h-2 rounded-full bg-muted-foreground/60" />
-            </div>
-          </div>
-
           {/* Canvas Render Elements Multi-Section Container */}
           <div
             ref={frameRef}
             key={`preview-frame-${previewKey}`}
             onPointerMove={handleFramePointerMove}
             onPointerLeave={handleFramePointerLeave}
+            onClick={handleFrameClick}
             onDragOver={handleFrameDragOver}
             onDrop={handleFrameDrop}
-            className="w-full relative overflow-hidden"
+            className={`w-full relative overflow-hidden ${pendingPlacement ? "cursor-copy" : "cursor-default"}`}
             style={{ height: `${sectionsCount * 720}px` }}
           >
             {/* Background Image Layer: Diimplementasikan ke Semua Section */}
@@ -901,67 +937,6 @@ export default function Canvas() {
                   />
                 ))
               ))}
-            {/* Visual Section Dividers & Guides (Hanya di mode Edit) */}
-            {!isPreviewMode &&
-              Array.from({ length: sectionsCount }, (_, index) => (
-                <div
-                  key={`section-guide-${index}`}
-                  className="absolute left-0 right-0 pointer-events-none select-none border-b border-dashed border-amber-500/20"
-                  style={{
-                    top: `${index * 720}px`,
-                    height: "720px",
-                  }}
-                >
-                  <div className="p-3 flex items-center justify-between opacity-85 hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-neutral-900/90 text-amber-300 border border-amber-500/30 backdrop-blur-xs">
-                        {index === 0
-                          ? "Section 1 • Layar Buka Undangan"
-                          : index === 1
-                            ? "Section 2 • Cover Utama & Nama Mempelai"
-                            : index === 2
-                              ? "Section 3 • Rangkaian Acara & Akad"
-                              : index === 3
-                                ? "Section 4 • Lokasi & Denah"
-                                : index === 4
-                                  ? "Section 5 • Doa & Ucapan"
-                                  : `Section ${index + 1} • Konten Halaman`}
-                      </span>
-                      {index === 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addOpeningSectionLayout();
-                            }}
-                            className="pointer-events-auto flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/30 to-yellow-500/30 hover:from-amber-500/45 hover:to-yellow-500/45 text-amber-300 border border-amber-400/50 text-[10px] font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
-                            title="Generate Layout Lengkap Pembuka (Nama Mempelai, Tamu & Tombol Buka Undangan)"
-                          >
-                            <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-                            <span>✨ Layout Pembuka Lengkap</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addOpenInvitationButton(0);
-                            }}
-                            className="pointer-events-auto flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-900/90 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 text-[10px] font-medium transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                            title="Tambah Tombol Buka Undangan Saja ke Section 1"
-                          >
-                            <span>+ Tombol Saja</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[9px] text-muted-foreground/70 font-mono">
-                      H: 720px
-                    </span>
-                  </div>
-                </div>
-              ))}
-
             {elements
               .filter((element) => !element.parentId)
               .sort(
@@ -982,6 +957,7 @@ export default function Canvas() {
                     key={el.id}
                     data-element-id={el.id}
                     onClick={(e) => {
+                      if (pendingPlacement) return;
                       if (isLocked) return;
                       if (isPreviewMode) return;
                       e.stopPropagation();
@@ -1081,38 +1057,73 @@ export default function Canvas() {
                 );
               })}
 
-            {/* Bottom Add/Remove Section Action Bar (Hanya di mode Edit) */}
-            {!isPreviewMode && (
-              <div
-                className="absolute left-4 right-4 flex items-center justify-center gap-2 pointer-events-auto"
-                style={{ top: `${sectionsCount * 720 - 58}px` }}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addSection();
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-medium rounded-full bg-primary/20 hover:bg-primary/30 text-primary border border-primary/40 backdrop-blur-md transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
-                >
-                  + Tambah Section ({sectionsCount + 1})
-                </button>
-                {sectionsCount > 1 && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeSection();
-                    }}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-medium rounded-full bg-destructive/20 hover:bg-destructive/30 text-destructive border border-destructive/40 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95"
-                  >
-                    - Hapus Section
+            {isPreviewMode && (
+              <div className={`absolute inset-x-0 top-0 z-40 h-[720px] overflow-hidden bg-stone-950 transition-transform duration-700 ease-in-out ${isCoverVisible ? "translate-y-0" : "-translate-y-full"}`}>
+                <img
+                  src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=900&auto=format&fit=crop&q=80"
+                  alt="Mempelai"
+                />
+                <div>
+                  <p>The Wedding Of</p>
+                  <h3>Alya & Raka</h3>
+                  <p>Kepada Yth.</p>
+                  <p>Nama Penerima Undangan</p>
+                  <button type="button" onClick={() => setIsCoverVisible(false)}>
+                    Buka Undangan
                   </button>
-                )}
+                </div>
               </div>
             )}
+
+            {isPreviewMode && isGiftModalOpen && (
+              <div className="absolute inset-x-0 top-0 z-50 flex h-[720px] items-center justify-center bg-black/60 px-6 backdrop-blur-sm">
+                <div>
+                  <Gift />
+                  <h3>Kirim Wedding Gift</h3>
+                  <p>Doa dan perhatian Anda sangat berarti bagi kami.</p>
+                  <div>
+                    <p>BCA</p>
+                    <p>123 456 7890</p>
+                    <p>Alya & Raka</p>
+                  </div>
+                  <button type="button" onClick={() => setIsGiftModalOpen(false)}>Tutup</button>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
+          </div>
+        </div>}
+
+        {/* Mockup Cover */}
+        {activeMockup === "cover" && <div className="flex shrink-0 flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Cover</span>
+          <div className="relative h-[720px] w-[360px] overflow-hidden rounded-3xl border border-border/60 bg-stone-950 shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=900&auto=format&fit=crop&q=80" alt="Foto kedua mempelai" />
+            <div>
+              <p>The Wedding Of</p>
+              <h3>Alya & Raka</h3>
+              <p>Kepada Yth.</p>
+              <p>Nama Penerima Undangan</p>
+              <button type="button" onClick={() => setIsCoverVisible(false)}>Buka Undangan</button>
+            </div>
+          </div>
+        </div>}
+
+        {/* Mockup Gift Modal */}
+        {activeMockup === "gift-modal" && <div className="flex shrink-0 flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gift Modal</span>
+          <div className="flex h-[720px] w-[360px] items-center justify-center rounded-3xl border border-border/60 bg-black/60 p-6 shadow-2xl">
+            <div>
+              <Gift />
+              <h3>Kirim Wedding Gift</h3>
+              <p>Doa dan perhatian Anda sangat berarti bagi kami.</p>
+              <div><p>BCA</p><p>123 456 7890</p><p>Alya & Raka</p></div>
+              <button type="button">Tutup</button>
+            </div>
+          </div>
+        </div>}
       </div>
     </div>
   );

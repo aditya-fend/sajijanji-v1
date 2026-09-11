@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useEditorStore } from "@/store/useEditorStore";
+import type { MockupType } from "@/store/useEditorStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,41 @@ import {
   GripVertical,
   Layers,
   LayoutTemplate,
+  PanelsTopLeft,
 } from "lucide-react";
+
+const DEFAULT_SECTIONS = [
+  "Opening",
+  "Countdown",
+  "Ayat / Quote",
+  "Mempelai",
+  "Tempat dan Tanggal Event",
+  "Love Story",
+  "Gallery",
+  "RSVP",
+  "Guestbook",
+  "Closing",
+];
+
+const MOCKUP_LAYERS: Record<Exclude<MockupType, "invitation">, string[]> = {
+  cover: [
+    "Foto Kedua Mempelai",
+    "The Wedding Of",
+    "Nama Kedua Mempelai",
+    "Kepada Yth.",
+    "Nama Penerima Undangan",
+    "Tombol Buka Undangan",
+  ],
+  "gift-modal": [
+    "Ikon Gift",
+    "Judul Gift",
+    "Deskripsi Gift",
+    "Nama Bank",
+    "Nomor Rekening",
+    "Nama Pemilik Rekening",
+    "Tombol Tutup",
+  ],
+};
 
 // Dummy Data Template (Grid 2 Kolom)
 const TEMPLATES = [
@@ -53,6 +88,7 @@ const TEMPLATES = [
 
 export default function SecondarySidebar() {
   const activeTab = useEditorStore((state) => state.activeTab);
+  const activeMockup = useEditorStore((state) => state.activeMockup);
   const searchQuery = useEditorStore((state) => state.searchQuery);
   const setSearchQuery = useEditorStore((state) => state.setSearchQuery);
   const layers = useEditorStore((state) => state.layers);
@@ -64,6 +100,7 @@ export default function SecondarySidebar() {
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const selectElement = useEditorStore((state) => state.selectElement);
   const moveLayer = useEditorStore((state) => state.moveLayer);
+  const sectionsCount = useEditorStore((state) => state.sectionsCount);
   const [draggedLayerId, setDraggedLayerId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{
     id: string;
@@ -197,11 +234,17 @@ export default function SecondarySidebar() {
         <div className="flex items-center gap-2">
           {activeTab === "templates" ? (
             <LayoutTemplate className="h-4 w-4 text-primary" />
+          ) : activeTab === "sections" ? (
+            <PanelsTopLeft className="h-4 w-4 text-primary" />
           ) : (
             <Layers className="h-4 w-4 text-primary" />
           )}
           <h2 className="text-sm font-semibold tracking-tight text-foreground">
-            {activeTab === "templates" ? "Pilih Template" : "Pengaturan Layer"}
+            {activeTab === "templates"
+              ? "Pilih Template"
+              : activeTab === "sections"
+                ? "Pengaturan Section"
+                : "Pengaturan Layer"}
           </h2>
         </div>
       </div>
@@ -263,17 +306,54 @@ export default function SecondarySidebar() {
         {activeTab === "layers" && (
           <div className="space-y-2">
             <p className="text-[11px] text-muted-foreground mb-3">
-              Urutkan dan kelola visibilitas elemen canvas.
+              {activeMockup === "invitation"
+                ? "Urutkan dan kelola visibilitas elemen undangan."
+                : `Komponen mockup ${activeMockup === "cover" ? "cover" : "gift modal"}.`}
             </p>
 
+            {activeMockup === "invitation" ? (
+              <div className="space-y-1">
+                {layers
+                  .filter(
+                    (layer) =>
+                      !elements.find((element) => element.id === layer.id)
+                        ?.parentId,
+                  )
+                  .map((layer) => renderLayer(layer))}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {MOCKUP_LAYERS[activeMockup].map((name) => (
+                  <div
+                    key={name}
+                    className="flex items-center gap-2 rounded-xl border border-border/30 bg-background/50 p-2 text-xs"
+                  >
+                    <Square className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="font-medium text-foreground">{name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "sections" && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Kelola urutan section undangan.
+            </p>
             <div className="space-y-1">
-              {layers
-                .filter(
-                  (layer) =>
-                    !elements.find((element) => element.id === layer.id)
-                      ?.parentId,
-                )
-                .map((layer) => renderLayer(layer))}
+              {DEFAULT_SECTIONS.slice(0, sectionsCount).map((section, index) => (
+                <div
+                  key={section}
+                  className="flex items-center gap-3 rounded-lg border border-border/40 bg-background/30 px-3 py-2.5"
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                    {index + 1}
+                  </span>
+                  <span className="text-xs font-medium text-foreground">{section}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
