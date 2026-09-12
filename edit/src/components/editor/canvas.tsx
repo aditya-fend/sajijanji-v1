@@ -39,6 +39,7 @@ import GuestbookList from "@/components/editor/GuestbookList";
 import {
   useEditorStore,
   DEFAULT_SECTIONS,
+  getElementSectionIndex,
   type CanvasElementType,
   type ShapeType,
   type MockupType,
@@ -1390,6 +1391,21 @@ export default function Canvas() {
               {/* Canva Purple Border Outline Box */}
               <div className="absolute inset-0 border-2 border-[#8b5cf6] pointer-events-none rounded-xs z-30" />
 
+              {/* Section Bounding Box Info Badge */}
+              {(!el.mockupType || el.mockupType === "invitation") && (() => {
+                const secIdx = getElementSectionIndex(el, elements, sectionsCount);
+                const sectionName = DEFAULT_SECTIONS[secIdx] || `Section ${secIdx + 1}`;
+                const elTopPx = typeof el.top === "number" ? el.top : parseFloat(String(el.top)) || 0;
+                const relativeTopPx = Math.round(elTopPx - secIdx * 844);
+                return (
+                  <div className="absolute -top-7 -right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-neutral-900/90 border border-amber-500/40 text-amber-300 text-[9px] font-mono shadow-md backdrop-blur-md z-40 pointer-events-none whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span>Sec {secIdx + 1}: {sectionName}</span>
+                    <span className="text-neutral-400">({relativeTopPx}px)</span>
+                  </div>
+                );
+              })()}
+
               {/* Rotation Handle above top-center */}
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto z-40">
                 <div className="w-[1.5px] h-3 bg-[#8b5cf6]" />
@@ -1981,10 +1997,19 @@ export default function Canvas() {
                       <div className="absolute inset-0 pointer-events-none z-10">
                         {Array.from({ length: sectionsCount }).map((_, idx) => {
                           const isCurrent = activeSection === idx;
+                          const selectedEl = elements.find((e) => e.id === selectedElementId);
+                          const isSelectedSection =
+                            selectedEl &&
+                            getElementSectionIndex(selectedEl, elements, sectionsCount) === idx;
+
                           return (
                             <div
                               key={`section-guide-${idx}`}
-                              className="absolute left-0 right-0"
+                              className={`absolute left-0 right-0 transition-all ${
+                                isSelectedSection
+                                  ? "border-2 border-dashed border-amber-500/40 bg-amber-500/[0.02] shadow-[inset_0_0_20px_rgba(245,158,11,0.06)]"
+                                  : ""
+                              }`}
                               style={{ top: `${idx * 844}px`, height: "844px" }}
                             >
                               {/* Garis batas section untuk section 2 ke atas */}
@@ -2427,7 +2452,7 @@ export default function Canvas() {
 
                 {/* Preview Mode Cover Overlay - Slide Up Animation */}
                 <div
-                  className={`absolute inset-0 z-40 w-full h-full overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  className={`absolute inset-0 z-40 w-full h-full overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center justify-center ${
                     isCoverVisible
                       ? "translate-y-0 opacity-100 pointer-events-auto"
                       : "-translate-y-full opacity-0 pointer-events-none"
@@ -2446,62 +2471,70 @@ export default function Canvas() {
                       }}
                     />
                   )}
-                  {elements
-                    .filter(
-                      (el) =>
-                        !el.parentId &&
-                        el.mockupType === "cover" &&
-                        layers.find((l) => l.id === el.id)?.visible !== false,
-                    )
-                    .sort(
-                      (a, b) =>
-                        layers.findIndex((layer) => layer.id === a.id) -
-                        layers.findIndex((layer) => layer.id === b.id),
-                    )
-                    .map((el) => (
-                      <div
-                        key={el.id}
-                        style={{
-                          top: el.top,
-                          left: el.left,
-                          width: el.width,
-                          height: el.height,
-                          opacity: el.opacity,
-                          position: el.positionMode ?? "absolute",
-                        }}
-                        className={el.type === "button" ? "pointer-events-auto z-20" : "pointer-events-none"}
-                      >
-                        {el.type === "button" ? (
-                          <div className="w-full h-full">
-                            <OpenInvitationButton
-                              text={typeof el.buttonText === "string" ? el.buttonText : (el.content || "Buka Undangan")}
-                              icon={el.buttonIcon || "mail"}
-                              variant={el.buttonVariant || "gold-luxury"}
-                              pulse={el.buttonPulse ?? true}
-                              className={el.style}
-                              customCode={el.buttonCustomCode}
-                              bgType={el.buttonBgType}
-                              bgColor={el.buttonBgColor}
-                              bgGradientEnd={el.buttonBgGradientEnd}
-                              textColor={el.buttonTextColor}
-                              borderColor={el.buttonBorderColor}
-                              borderWidth={el.buttonBorderWidth}
-                              borderRadius={el.buttonBorderRadius}
-                              shape={el.buttonShape}
-                              fontFamily={el.buttonFontFamily}
-                              fontSize={el.buttonFontSize}
-                              fontWeight={el.buttonFontWeight}
-                              letterSpacing={el.buttonLetterSpacing}
-                              textTransform={el.buttonTextTransform}
-                              shadow={el.buttonShadow}
-                              onClick={() => handleOpenInvitationFromCover(el.buttonTargetSection ?? 0)}
-                            />
-                          </div>
-                        ) : (
-                          renderElement(el)
-                        )}
-                      </div>
-                    ))}
+                  {/* Scaled & Centered 390x844 Canvas Frame for Cover Elements */}
+                  <div
+                    className="w-[390px] h-[844px] relative origin-center transition-transform duration-75 flex-shrink-0"
+                    style={{
+                      transform: `scale(${previewScale})`,
+                    }}
+                  >
+                    {elements
+                      .filter(
+                        (el) =>
+                          !el.parentId &&
+                          el.mockupType === "cover" &&
+                          layers.find((l) => l.id === el.id)?.visible !== false,
+                      )
+                      .sort(
+                        (a, b) =>
+                          layers.findIndex((layer) => layer.id === a.id) -
+                          layers.findIndex((layer) => layer.id === b.id),
+                      )
+                      .map((el) => (
+                        <div
+                          key={el.id}
+                          style={{
+                            top: el.top,
+                            left: el.left,
+                            width: el.width,
+                            height: el.height,
+                            opacity: el.opacity,
+                            position: el.positionMode ?? "absolute",
+                          }}
+                          className={el.type === "button" ? "pointer-events-auto z-20" : "pointer-events-none"}
+                        >
+                          {el.type === "button" ? (
+                            <div className="w-full h-full">
+                              <OpenInvitationButton
+                                text={typeof el.buttonText === "string" ? el.buttonText : (el.content || "Buka Undangan")}
+                                icon={el.buttonIcon || "mail"}
+                                variant={el.buttonVariant || "gold-luxury"}
+                                pulse={el.buttonPulse ?? true}
+                                className={el.style}
+                                customCode={el.buttonCustomCode}
+                                bgType={el.buttonBgType}
+                                bgColor={el.buttonBgColor}
+                                bgGradientEnd={el.buttonBgGradientEnd}
+                                textColor={el.buttonTextColor}
+                                borderColor={el.buttonBorderColor}
+                                borderWidth={el.buttonBorderWidth}
+                                borderRadius={el.buttonBorderRadius}
+                                shape={el.buttonShape}
+                                fontFamily={el.buttonFontFamily}
+                                fontSize={el.buttonFontSize}
+                                fontWeight={el.buttonFontWeight}
+                                letterSpacing={el.buttonLetterSpacing}
+                                textTransform={el.buttonTextTransform}
+                                shadow={el.buttonShadow}
+                                onClick={() => handleOpenInvitationFromCover(el.buttonTargetSection ?? 0)}
+                              />
+                            </div>
+                          ) : (
+                            renderElement(el)
+                          )}
+                        </div>
+                      ))}
+                  </div>
                 </div>
 
                 {/* Preview Mode Gift Modal Overlay */}

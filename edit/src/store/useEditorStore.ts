@@ -1674,11 +1674,36 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
   updateElement: (id, updates) =>
-    set((state) => ({
-      elements: state.elements.map((element) =>
+    set((state) => {
+      const updatedElements = state.elements.map((element) =>
         element.id === id ? { ...element, ...updates } : element,
-      ),
-    })),
+      );
+      const targetElement = updatedElements.find((e) => e.id === id);
+      let updatedLayers = state.layers;
+      if (targetElement) {
+        const secIndex = getElementSectionIndex(
+          targetElement,
+          updatedElements,
+          state.sectionsCount,
+        );
+        if (targetElement.sectionIndex !== secIndex) {
+          targetElement.sectionIndex = secIndex;
+        }
+        updatedLayers = state.layers.map((layer) =>
+          layer.id === id
+            ? {
+                ...layer,
+                sectionIndex: secIndex,
+                mockupType: targetElement.mockupType,
+              }
+            : layer,
+        );
+      }
+      return {
+        elements: updatedElements,
+        layers: updatedLayers,
+      };
+    }),
   deleteElement: (id) =>
     set((state) => ({
       elements: state.elements.filter((element) => element.id !== id),
@@ -1716,6 +1741,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         type: originalElement.type,
         visible: true,
         locked: false,
+        mockupType: originalElement.mockupType,
+        sectionIndex: originalElement.sectionIndex,
       };
 
       const newLayers = [...state.layers];
@@ -1851,7 +1878,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
       return {
         elements: state.elements.map((el) =>
-          el.id === id ? { ...el, left: newLeft, top: newTop } : el,
+          el.id === id ? { ...el, left: newLeft, top: newTop, sectionIndex: secIdx } : el,
+        ),
+        layers: state.layers.map((layer) =>
+          layer.id === id ? { ...layer, sectionIndex: secIdx } : layer,
         ),
       };
     }),
