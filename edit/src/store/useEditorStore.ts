@@ -17,11 +17,12 @@ export type ButtonIconType =
   | "mail"
   | "mail-open"
   | "heart"
+  | "gift"
   | "sparkles"
   | "music"
   | "chevron-down"
   | "none";
-export type ButtonActionType = "scroll-to-section" | "url" | "gift-modal";
+export type ButtonActionType = "scroll-to-section" | "url" | "gift-modal" | "toggle-music";
 export type AnimationName =
   | "none"
   | "fade-up"
@@ -51,6 +52,10 @@ export type TextEffectType =
   | "wave-float"
   | "blur-reveal"
   | "neon-pulse";
+
+export type ButtonBgType = "gradient" | "solid" | "glass" | "outline";
+export type ButtonShapeType = "pill" | "rounded-xl" | "rounded-md" | "square";
+export type ButtonShadowType = "none" | "soft" | "glow" | "luxury";
 
 export interface ElementAnimationConfig {
   mount: AnimationName;
@@ -103,6 +108,9 @@ export interface EditorCanvasElement {
   gap?: number;
   flipX?: boolean;
   flipY?: boolean;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
   textEffect?: TextEffectType;
   buttonText?: string;
   buttonIcon?: ButtonIconType;
@@ -111,7 +119,28 @@ export interface EditorCanvasElement {
   buttonTargetSection?: number;
   buttonPulse?: boolean;
   buttonUrl?: string;
+  buttonCustomCode?: string;
+  buttonBgType?: ButtonBgType;
+  buttonBgColor?: string;
+  buttonBgGradientEnd?: string;
+  buttonTextColor?: string;
+  buttonBorderColor?: string;
+  buttonBorderWidth?: number;
+  buttonBorderRadius?: number;
+  buttonShape?: ButtonShapeType;
+  buttonFontFamily?: string;
+  buttonFontSize?: number;
+  buttonFontWeight?: string;
+  buttonLetterSpacing?: string;
+  buttonTextTransform?: "uppercase" | "capitalize" | "none";
+  buttonShadow?: ButtonShadowType;
   animation?: ElementAnimationConfig;
+  mockupType?: MockupType;
+  sectionIndex?: number;
+  isCountdown?: boolean;
+  countdownTargetDate?: string;
+  isRsvpForm?: boolean;
+  isGuestbook?: boolean;
 }
 
 export interface EditorLayer {
@@ -120,6 +149,58 @@ export interface EditorLayer {
   type: CanvasElementType;
   visible: boolean;
   locked: boolean;
+  mockupType?: MockupType;
+  sectionIndex?: number;
+}
+
+export function getElementSectionIndex(
+  element: { top?: string | number; sectionIndex?: number; parentId?: string; id?: string },
+  elements?: EditorCanvasElement[],
+  sectionsCount: number = 10,
+): number {
+  if (element.sectionIndex !== undefined && element.sectionIndex !== null) {
+    return Math.min(sectionsCount - 1, Math.max(0, element.sectionIndex));
+  }
+
+  // If element has parent container, inherit parent's section
+  if (element.parentId && elements) {
+    const parent = elements.find((e) => e.id === element.parentId);
+    if (parent) {
+      return getElementSectionIndex(parent, elements, sectionsCount);
+    }
+  }
+
+  const topVal = element.top;
+  if (topVal === undefined || topVal === null) return 0;
+
+  if (typeof topVal === "number") {
+    return Math.min(sectionsCount - 1, Math.max(0, Math.floor(topVal / 844)));
+  }
+
+  const topStr = String(topVal).trim();
+  if (topStr.endsWith("px")) {
+    const px = parseFloat(topStr);
+    return Math.min(sectionsCount - 1, Math.max(0, Math.floor(px / 844)));
+  }
+
+  if (topStr.endsWith("%")) {
+    const pct = parseFloat(topStr);
+    if (isNaN(pct)) return 0;
+    if (pct >= 100) {
+      return Math.min(sectionsCount - 1, Math.max(0, Math.floor(pct / 100)));
+    }
+    return Math.min(sectionsCount - 1, Math.max(0, Math.floor((pct / 100) * sectionsCount)));
+  }
+
+  const raw = parseFloat(topStr);
+  if (!isNaN(raw)) {
+    if (raw > 100) {
+      return Math.min(sectionsCount - 1, Math.max(0, Math.floor(raw / 844)));
+    }
+    return Math.min(sectionsCount - 1, Math.max(0, Math.floor((raw / 100) * sectionsCount)));
+  }
+
+  return 0;
 }
 
 interface EditorState {
@@ -144,6 +225,8 @@ interface EditorState {
   bgImagePosY: number; // 0% - 100%
   bgImageScale: number; // 20% - 300%
   bgImageFixed: boolean; // Parallax / Sticky to viewport
+  laptopCoverImage: string | null;
+  setLaptopCoverImage: (url: string | null) => void;
   pendingImageFile: File | null;
   setActiveTab: (tab: SidebarTab) => void;
   setActiveMockup: (mockup: MockupType) => void;
@@ -167,25 +250,9 @@ interface EditorState {
   setBgImageFixed: (value: boolean) => void;
   addElement: (
     type: CanvasElementType,
-    options?: {
-      content?: string;
-      style?: string;
+    options?: Partial<EditorCanvasElement> & {
       name?: string;
-      shape?: ShapeType;
       position?: { top: string; left: string };
-      width?: number;
-      height?: number;
-      parentId?: string;
-      positionMode?: "relative" | "absolute" | "fixed" | "sticky";
-      flipX?: boolean;
-      flipY?: boolean;
-      buttonText?: string;
-      buttonIcon?: ButtonIconType;
-      buttonVariant?: ButtonVariantType;
-      buttonAction?: ButtonActionType;
-      buttonTargetSection?: number;
-      buttonPulse?: boolean;
-      buttonUrl?: string;
     },
   ) => void;
   addOpenInvitationButton: (sectionIndex?: number) => void;
@@ -200,6 +267,14 @@ interface EditorState {
   flipElementHorizontal: (id: string) => void;
   flipElementVertical: (id: string) => void;
   moveLayer: (id: string, targetId: string, asChild?: boolean) => void;
+  bringForward: (id: string) => void;
+  sendBackward: (id: string) => void;
+  bringToFront: (id: string) => void;
+  sendToBack: (id: string) => void;
+  alignElement: (
+    id: string,
+    alignment: "left" | "center-x" | "right" | "top" | "center-y" | "bottom",
+  ) => void;
   setPendingImageFile: (file: File | null) => void;
   setFontSize: (value: number[]) => void;
   setOpacity: (value: number[]) => void;
@@ -208,18 +283,868 @@ interface EditorState {
   toggleLayerVisibility: (id: string) => void;
   toggleLayerLock: (id: string) => void;
   sectionsCount: number;
+  activeSection: number;
+  targetScrollSection: { index: number; timestamp: number } | null;
   addSection: () => void;
   removeSection: () => void;
   setSectionsCount: (count: number) => void;
+  setActiveSection: (index: number) => void;
+  scrollToSection: (index: number) => void;
   isPreviewMode: boolean;
   setIsPreviewMode: (isPreview: boolean) => void;
   togglePreviewMode: () => void;
+  isCoverVisible: boolean;
+  setIsCoverVisible: (visible: boolean) => void;
+  playPreview: () => void;
+  isGiftModalOpen: boolean;
+  setIsGiftModalOpen: (open: boolean) => void;
+  openGiftModal: () => void;
+  addGiftButton: (sectionIndex?: number) => void;
+  isMusicPlaying: boolean;
+  audioUrl: string | null;
+  toggleMusic: () => void;
+  setIsMusicPlaying: (playing: boolean) => void;
+  setAudioUrl: (url: string | null) => void;
+  addMusicButton: (sectionIndex?: number) => void;
 }
 
-const initialElements: EditorCanvasElement[] = [];
-const initialLayers: EditorLayer[] = [];
+export const DEFAULT_SECTIONS = [
+  "Opening",
+  "Ayat / Quote",
+  "Mempelai",
+  "Tempat dan Tanggal Event",
+  "Countdown",
+  "Love Story",
+  "Gallery",
+  "RSVP",
+  "Guestbook",
+  "Closing",
+];
 
-export const useEditorStore = create<EditorState>((set) => ({
+const noAnim: ElementAnimationConfig = { mount: "none", unmount: "none", loop: "none" };
+
+const initialCoverElements: EditorCanvasElement[] = [
+  {
+    id: "cover-photo", type: "image", mockupType: "cover",
+    content: "", style: "rounded-2xl border-2 border-amber-500/20 bg-neutral-800/60 shadow-2xl",
+    top: "90px", left: "95px", width: 200, height: 250, opacity: 1,
+    objectFit: "cover", borderRadius: 16, positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "cover-title", type: "text", mockupType: "cover",
+    content: "THE WEDDING OF",
+    style: "font-sans tracking-[0.25em] font-semibold text-center uppercase",
+    top: "365px", left: "33px", width: 324, height: 28,
+    fontSize: 11, color: "#fcd34d", opacity: 1, fontWeight: "bold", textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "cover-names", type: "text", mockupType: "cover",
+    content: "Romeo & Juliet",
+    style: "font-serif text-center font-bold",
+    top: "405px", left: "33px", width: 324, height: 56,
+    fontSize: 32, color: "#ffffff", opacity: 1, fontWeight: "bold", textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "cover-kepada", type: "text", mockupType: "cover",
+    content: "Kepada Yth. Bapak/Ibu/Saudara/i:",
+    style: "font-sans text-center",
+    top: "525px", left: "33px", width: 324, height: 24,
+    fontSize: 11, color: "#a1a1aa", opacity: 1, textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "cover-guest", type: "text", mockupType: "cover",
+    content: "Tamu Undangan Terhormat",
+    style: "font-sans font-bold text-center tracking-wide",
+    top: "555px", left: "33px", width: 324, height: 32,
+    fontSize: 16, color: "#fcd34d", opacity: 1, fontWeight: "bold", textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "cover-btn", type: "button", mockupType: "cover",
+    content: "Buka Undangan", buttonText: "Buka Undangan",
+    buttonIcon: "mail", buttonVariant: "gold-luxury", buttonAction: "scroll-to-section",
+    buttonTargetSection: 0, buttonPulse: true,
+    buttonBgType: "gradient", buttonBgColor: "#d97706", buttonBgGradientEnd: "#eab308",
+    buttonTextColor: "#0a0a0a", buttonBorderColor: "#fcd34d", buttonBorderWidth: 1,
+    buttonBorderRadius: 9999, buttonShape: "pill", buttonFontSize: 13, buttonFontWeight: "bold", buttonShadow: "glow",
+    style: "", top: "680px", left: "69px", width: 252, height: 50, opacity: 1,
+    positionMode: "absolute", borderRadius: 9999, animation: noAnim,
+  },
+];
+
+const initialCoverLayers: EditorLayer[] = [
+  { id: "cover-photo", name: "Foto Kedua Mempelai", type: "image", visible: true, locked: false, mockupType: "cover" },
+  { id: "cover-title", name: "The Wedding Of", type: "text", visible: true, locked: false, mockupType: "cover" },
+  { id: "cover-names", name: "Nama Kedua Mempelai", type: "text", visible: true, locked: false, mockupType: "cover" },
+  { id: "cover-kepada", name: "Kepada Yth.", type: "text", visible: true, locked: false, mockupType: "cover" },
+  { id: "cover-guest", name: "Nama Penerima Undangan", type: "text", visible: true, locked: false, mockupType: "cover" },
+  { id: "cover-btn", name: "Tombol Buka Undangan", type: "button", visible: true, locked: false, mockupType: "cover" },
+];
+
+const initialGiftElements: EditorCanvasElement[] = [
+  {
+    id: "gift-icon", type: "shape", mockupType: "gift-modal",
+    content: "", shape: "circle",
+    style: "h-16 w-16 rounded-full bg-amber-500/20 border-2 border-amber-400/40 shadow-lg",
+    top: "80px", left: "163px", width: 64, height: 64, opacity: 1,
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "gift-title", type: "text", mockupType: "gift-modal",
+    content: "Amplop Digital",
+    style: "font-serif text-center font-bold",
+    top: "160px", left: "33px", width: 324, height: 40,
+    fontSize: 22, color: "#ffffff", opacity: 1, fontWeight: "bold", textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "gift-desc", type: "text", mockupType: "gift-modal",
+    content: "Doa dan dukungan Anda merupakan hadiah terbaik bagi kami.",
+    style: "font-sans text-center",
+    top: "210px", left: "33px", width: 324, height: 40,
+    fontSize: 12, color: "#a1a1aa", opacity: 1, textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "gift-bank", type: "text", mockupType: "gift-modal",
+    content: "Bank BCA",
+    style: "font-sans font-semibold text-center uppercase tracking-wider",
+    top: "280px", left: "33px", width: 324, height: 28,
+    fontSize: 13, color: "#fcd34d", opacity: 1, fontWeight: "bold", textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "gift-account", type: "text", mockupType: "gift-modal",
+    content: "1234 5678 9012",
+    style: "font-mono text-center font-bold tracking-widest",
+    top: "320px", left: "33px", width: 324, height: 32,
+    fontSize: 18, color: "#ffffff", opacity: 1, fontWeight: "bold", textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "gift-holder", type: "text", mockupType: "gift-modal",
+    content: "a.n. Romeo & Juliet",
+    style: "font-sans text-center",
+    top: "360px", left: "33px", width: 324, height: 24,
+    fontSize: 12, color: "#a1a1aa", opacity: 1, textAlign: "center",
+    positionMode: "absolute", animation: noAnim,
+  },
+  {
+    id: "gift-btn", type: "button", mockupType: "gift-modal",
+    content: "Tutup", buttonText: "Tutup",
+    buttonIcon: "none", buttonVariant: "minimal-outline", buttonAction: "gift-modal",
+    buttonPulse: false,
+    buttonBgType: "outline", buttonBgColor: "transparent", buttonTextColor: "#fcd34d",
+    buttonBorderColor: "rgba(252, 211, 77, 0.5)", buttonBorderWidth: 1, buttonBorderRadius: 9999,
+    buttonShape: "pill", buttonFontSize: 13, buttonFontWeight: "bold", buttonShadow: "none",
+    style: "", top: "440px", left: "95px", width: 200, height: 44, opacity: 1,
+    positionMode: "absolute", borderRadius: 9999, animation: noAnim,
+  },
+];
+
+const initialGiftLayers: EditorLayer[] = [
+  { id: "gift-icon", name: "Ikon Gift", type: "shape", visible: true, locked: false, mockupType: "gift-modal" },
+  { id: "gift-title", name: "Judul Gift", type: "text", visible: true, locked: false, mockupType: "gift-modal" },
+  { id: "gift-desc", name: "Deskripsi Gift", type: "text", visible: true, locked: false, mockupType: "gift-modal" },
+  { id: "gift-bank", name: "Nama Bank", type: "text", visible: true, locked: false, mockupType: "gift-modal" },
+  { id: "gift-account", name: "Nomor Rekening", type: "text", visible: true, locked: false, mockupType: "gift-modal" },
+  { id: "gift-holder", name: "Pemilik Rekening", type: "text", visible: true, locked: false, mockupType: "gift-modal" },
+  { id: "gift-btn", name: "Tombol Tutup Modal", type: "button", visible: true, locked: false, mockupType: "gift-modal" },
+];
+
+const initialInvitationElements: EditorCanvasElement[] = [
+  // SECTION 1: OPENING (sectionIndex: 0, top: 0px - 844px)
+  {
+    id: "inv-bismillah",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 0,
+    content: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم",
+    style: "font-serif text-center font-medium",
+    top: "220px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 18,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-wedding-title",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 0,
+    content: "THE WEDDING OF",
+    style: "font-sans tracking-[0.25em] font-semibold text-center uppercase",
+    top: "276px",
+    left: "33px",
+    width: 324,
+    height: 24,
+    fontSize: 11,
+    color: "#fcd34d",
+    opacity: 1,
+    fontWeight: "bold",
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-couple-names",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 0,
+    content: "Romeo & Juliet",
+    style: "font-serif text-center font-bold",
+    top: "316px",
+    left: "33px",
+    width: 324,
+    height: 64,
+    fontSize: 34,
+    color: "#ffffff",
+    opacity: 1,
+    fontWeight: "bold",
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-date",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 0,
+    content: "Sabtu, 12 September 2026",
+    style: "font-sans text-center font-medium tracking-wide",
+    top: "400px",
+    left: "33px",
+    width: 324,
+    height: 28,
+    fontSize: 13,
+    color: "#e4e4e7",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 2: AYAT / QUOTE (sectionIndex: 1, top: 844px - 1688px)
+  {
+    id: "inv-quote-text",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 1,
+    content: "Dan di antara tanda-tanda (kebesaran)-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang.",
+    style: "font-serif text-center font-medium italic leading-relaxed",
+    top: "1180px",
+    left: "33px",
+    width: 324,
+    height: 120,
+    fontSize: 13,
+    color: "#e4e4e7",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-quote-ref",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 1,
+    content: "(QS. Ar-Rum: 21)",
+    style: "font-sans text-center font-semibold tracking-wider",
+    top: "1320px",
+    left: "33px",
+    width: 324,
+    height: 28,
+    fontSize: 13,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 3: MEMPELAI (sectionIndex: 2, top: 1688px - 2532px)
+  {
+    id: "inv-sec2-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 2,
+    content: "Mempelai Pria & Wanita",
+    style: "font-serif text-center font-bold",
+    top: "1940px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-groom-name",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 2,
+    content: "Romeo Montague",
+    style: "font-serif text-center font-bold",
+    top: "2000px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 20,
+    color: "#ffffff",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-groom-parents",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 2,
+    content: "Putra dari Bpk. Montague & Ibu Montague",
+    style: "font-sans text-center",
+    top: "2044px",
+    left: "33px",
+    width: 324,
+    height: 24,
+    fontSize: 11,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-with-symbol",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 2,
+    content: "&",
+    style: "font-serif text-center font-bold",
+    top: "2084px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 24,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-bride-name",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 2,
+    content: "Juliet Capulet",
+    style: "font-serif text-center font-bold",
+    top: "2130px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 20,
+    color: "#ffffff",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-bride-parents",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 2,
+    content: "Putri dari Bpk. Capulet & Ibu Capulet",
+    style: "font-sans text-center",
+    top: "2174px",
+    left: "33px",
+    width: 324,
+    height: 24,
+    fontSize: 11,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 4: TEMPAT & TANGGAL (sectionIndex: 3, top: 2532px - 3376px)
+  {
+    id: "inv-sec3-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 3,
+    content: "Waktu & Tempat Acara",
+    style: "font-serif text-center font-bold",
+    top: "2840px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-sec3-date",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 3,
+    content: "Akad Nikah: 08.00 WIB\nResepsi: 11.00 - 14.00 WIB",
+    style: "font-sans text-center tracking-wide leading-relaxed",
+    top: "2896px",
+    left: "33px",
+    width: 324,
+    height: 60,
+    fontSize: 13,
+    color: "#ffffff",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-sec3-venue",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 3,
+    content: "Grand Ballroom Hotel Mulia, Jakarta",
+    style: "font-sans text-center font-medium",
+    top: "2970px",
+    left: "33px",
+    width: 324,
+    height: 30,
+    fontSize: 12,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 5: COUNTDOWN (sectionIndex: 4, top: 3376px - 4220px)
+  {
+    id: "inv-countdown-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 4,
+    content: "Hitung Mundur Hari Bahagia",
+    style: "font-serif text-center font-bold",
+    top: "3710px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-countdown-timer",
+    type: "text",
+    isCountdown: true,
+    countdownTargetDate: "2026-09-20T08:00",
+    mockupType: "invitation",
+    sectionIndex: 4,
+    content: "12 : 08 : 45 : 30",
+    style: "bg-transparent font-mono text-center font-bold tracking-widest",
+    top: "3766px",
+    left: "33px",
+    width: 324,
+    height: 80,
+    fontSize: 28,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 6: LOVE STORY (sectionIndex: 5, top: 4220px - 5064px)
+  {
+    id: "inv-story-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 5,
+    content: "Cerita Cinta Kami",
+    style: "font-serif text-center font-bold",
+    top: "4550px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-story-text",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 5,
+    content: "Berawal dari sebuah pertemuan sederhana di musim semi, kami tumbuh bersama membawa harapan hingga akhirnya memutuskan mengikat janji suci selamanya.",
+    style: "font-serif text-center font-medium italic leading-relaxed",
+    top: "4606px",
+    left: "33px",
+    width: 324,
+    height: 100,
+    fontSize: 13,
+    color: "#e4e4e7",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 7: GALLERY (sectionIndex: 6, top: 5064px - 5908px)
+  {
+    id: "inv-gallery-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 6,
+    content: "Galeri Momen Bahagia",
+    style: "font-serif text-center font-bold",
+    top: "5390px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-gallery-sub",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 6,
+    content: "Kumpulan kenangan manis perjalanan cinta kami",
+    style: "font-sans text-center",
+    top: "5436px",
+    left: "33px",
+    width: 324,
+    height: 30,
+    fontSize: 12,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 8: RSVP (sectionIndex: 7, top: 5908px - 6752px)
+  {
+    id: "inv-rsvp-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 7,
+    content: "Konfirmasi Kehadiran",
+    style: "font-serif text-center font-bold",
+    top: "6020px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-rsvp-desc",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 7,
+    content: "Mohon konfirmasi kehadiran Anda untuk membantu memfasilitasi kenyamanan acara.",
+    style: "font-sans text-center",
+    top: "6066px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 11,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-rsvp-form",
+    type: "text",
+    isRsvpForm: true,
+    mockupType: "invitation",
+    sectionIndex: 7,
+    content: "",
+    style: "w-full h-full",
+    top: "6112px",
+    left: "33px",
+    width: 324,
+    height: 500,
+    opacity: 1,
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 9: GUESTBOOK (sectionIndex: 8, top: 6752px - 7596px)
+  {
+    id: "inv-guestbook-heading",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 8,
+    content: "Ucapan & Doa Restu",
+    style: "font-serif text-center font-bold",
+    top: "6860px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-guestbook-desc",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 8,
+    content: "Berikut pesan & doa hangat dari kerabat serta sahabat terkasih:",
+    style: "font-sans text-center",
+    top: "6906px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 11,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-guestbook-list",
+    type: "text",
+    isGuestbook: true,
+    mockupType: "invitation",
+    sectionIndex: 8,
+    content: "",
+    style: "w-full h-full",
+    top: "6952px",
+    left: "33px",
+    width: 324,
+    height: 500,
+    opacity: 1,
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // SECTION 10: CLOSING (sectionIndex: 9, top: 7596px - 8440px)
+  {
+    id: "inv-closing-thanks",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 9,
+    content: "Terima Kasih",
+    style: "font-serif text-center font-bold",
+    top: "7920px",
+    left: "33px",
+    width: 324,
+    height: 36,
+    fontSize: 22,
+    color: "#fcd34d",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-closing-text",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 9,
+    content: "Merupakan suatu kehormatan & kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu.",
+    style: "font-sans text-center leading-relaxed",
+    top: "7966px",
+    left: "33px",
+    width: 324,
+    height: 80,
+    fontSize: 12,
+    color: "#a1a1aa",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+  {
+    id: "inv-closing-names",
+    type: "text",
+    mockupType: "invitation",
+    sectionIndex: 9,
+    content: "Romeo & Juliet",
+    style: "font-serif text-center font-bold",
+    top: "8056px",
+    left: "33px",
+    width: 324,
+    height: 44,
+    fontSize: 28,
+    color: "#ffffff",
+    opacity: 1,
+    textAlign: "center",
+    positionMode: "absolute",
+    animation: noAnim,
+  },
+
+  // STICKY BUTTONS (Fixed overlay across sections - Default action buttons)
+  {
+    id: "inv-sticky-gift-btn",
+    type: "button",
+    mockupType: "invitation",
+    content: "",
+    buttonText: "",
+    buttonIcon: "gift",
+    buttonVariant: "gold-luxury",
+    buttonAction: "gift-modal",
+    buttonPulse: true,
+    buttonBgType: "gradient",
+    buttonBgColor: "#e11d48",
+    buttonBgGradientEnd: "#f59e0b",
+    buttonTextColor: "#ffffff",
+    buttonBorderColor: "#fcd34d",
+    buttonBorderWidth: 1.5,
+    buttonBorderRadius: 9999,
+    buttonShape: "pill",
+    buttonShadow: "luxury",
+    style: "",
+    top: "84%",
+    left: "80%",
+    width: 48,
+    height: 48,
+    opacity: 1,
+    positionMode: "fixed",
+    borderRadius: 9999,
+    animation: noAnim,
+  },
+  {
+    id: "inv-sticky-music-btn",
+    type: "button",
+    mockupType: "invitation",
+    content: "",
+    buttonText: "",
+    buttonIcon: "music",
+    buttonVariant: "gold-luxury",
+    buttonAction: "toggle-music",
+    buttonPulse: true,
+    buttonBgType: "gradient",
+    buttonBgColor: "#059669",
+    buttonBgGradientEnd: "#10b981",
+    buttonTextColor: "#ffffff",
+    buttonBorderColor: "#6ee7b7",
+    buttonBorderWidth: 1.5,
+    buttonBorderRadius: 9999,
+    buttonShape: "pill",
+    buttonShadow: "luxury",
+    style: "",
+    top: "84%",
+    left: "6%",
+    width: 48,
+    height: 48,
+    opacity: 1,
+    positionMode: "fixed",
+    borderRadius: 9999,
+    animation: noAnim,
+  },
+];
+
+const initialInvitationLayers: EditorLayer[] = [
+  // Section 1: Opening
+  { id: "inv-bismillah", name: "Bismillah Pembuka", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 0 },
+  { id: "inv-wedding-title", name: "The Wedding Of", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 0 },
+  { id: "inv-couple-names", name: "Nama Romeo & Juliet", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 0 },
+  { id: "inv-date", name: "Tanggal Acara", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 0 },
+
+  // Section 2: Ayat / Quote
+  { id: "inv-quote-text", name: "Kutipan Ayat Al-Qur'an", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 1 },
+  { id: "inv-quote-ref", name: "Referensi Surat Ayat", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 1 },
+
+  // Section 3: Mempelai
+  { id: "inv-sec2-heading", name: "Judul Mempelai", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 2 },
+  { id: "inv-groom-name", name: "Nama Mempelai Pria", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 2 },
+  { id: "inv-groom-parents", name: "Orang Tua Pria", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 2 },
+  { id: "inv-with-symbol", name: "Simbol Dan (&)", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 2 },
+  { id: "inv-bride-name", name: "Nama Mempelai Wanita", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 2 },
+  { id: "inv-bride-parents", name: "Orang Tua Wanita", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 2 },
+
+  // Section 4: Tempat & Tanggal
+  { id: "inv-sec3-heading", name: "Judul Tempat Acara", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 3 },
+  { id: "inv-sec3-date", name: "Waktu Akad & Resepsi", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 3 },
+  { id: "inv-sec3-venue", name: "Lokasi Ballroom", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 3 },
+
+  // Section 5: Countdown
+  { id: "inv-countdown-heading", name: "Judul Countdown", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 4 },
+  { id: "inv-countdown-timer", name: "Hitung Mundur Acara", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 4 },
+
+  // Section 6: Love Story
+  { id: "inv-story-heading", name: "Judul Cerita Cinta", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 5 },
+  { id: "inv-story-text", name: "Kisah Cinta Mempelai", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 5 },
+
+  // Section 7: Gallery
+  { id: "inv-gallery-heading", name: "Judul Galeri Foto", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 6 },
+  { id: "inv-gallery-sub", name: "Sub-Judul Galeri", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 6 },
+
+  // Section 8: RSVP
+  { id: "inv-rsvp-heading", name: "Judul RSVP", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 7 },
+  { id: "inv-rsvp-desc", name: "Deskripsi RSVP", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 7 },
+  { id: "inv-rsvp-form", name: "Form Konfirmasi Kehadiran", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 7 },
+
+  // Section 9: Guestbook
+  { id: "inv-guestbook-heading", name: "Judul Guestbook", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 8 },
+  { id: "inv-guestbook-desc", name: "Deskripsi Guestbook", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 8 },
+  { id: "inv-guestbook-list", name: "Daftar Ucapan & Doa Tamu", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 8 },
+
+  // Section 10: Closing
+  { id: "inv-closing-thanks", name: "Judul Penutup", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 9 },
+  { id: "inv-closing-text", name: "Teks Terima Kasih", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 9 },
+  { id: "inv-closing-names", name: "Nama Penutup Mempelai", type: "text", visible: true, locked: false, mockupType: "invitation", sectionIndex: 9 },
+
+  // Sticky Buttons
+  { id: "inv-sticky-gift-btn", name: "Tombol Gift Melayang (Sticky Lingkaran)", type: "button", visible: true, locked: false, mockupType: "invitation" },
+  { id: "inv-sticky-music-btn", name: "Tombol Musik Melayang (Sticky Lingkaran)", type: "button", visible: true, locked: false, mockupType: "invitation" },
+];
+
+const initialElements: EditorCanvasElement[] = [
+  ...initialInvitationElements,
+  ...initialCoverElements,
+  ...initialGiftElements,
+];
+const initialLayers: EditorLayer[] = [
+  ...initialInvitationLayers,
+  ...initialCoverLayers,
+  ...initialGiftLayers,
+];
+
+export const useEditorStore = create<EditorState>((set, get) => ({
   activeTab: "templates",
   activeMockup: "invitation",
   selectedElementId: null,
@@ -229,7 +1154,11 @@ export const useEditorStore = create<EditorState>((set) => ({
   elements: initialElements,
   layers: initialLayers,
   sectionsCount: 10,
+  activeSection: 0,
+  targetScrollSection: null,
   isPreviewMode: false,
+  isCoverVisible: true,
+  isGiftModalOpen: false,
   fontSize: [24],
   opacity: [100],
   fontFamily: "caveat",
@@ -243,6 +1172,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   bgImagePosY: 50,
   bgImageScale: 100,
   bgImageFixed: false,
+  laptopCoverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1200&auto=format&fit=crop",
+  setLaptopCoverImage: (laptopCoverImage) => set({ laptopCoverImage }),
   pendingImageFile: null,
   setActiveTab: (activeTab) => set({ activeTab }),
   setActiveMockup: (activeMockup) =>
@@ -257,19 +1188,100 @@ export const useEditorStore = create<EditorState>((set) => ({
   setIsPreviewMode: (isPreviewMode) =>
     set({
       isPreviewMode,
+      isCoverVisible: true,
       selectedElementId: isPreviewMode ? null : undefined,
     }),
   togglePreviewMode: () =>
     set((state) => ({
       isPreviewMode: !state.isPreviewMode,
+      isCoverVisible: true,
       selectedElementId: !state.isPreviewMode ? null : state.selectedElementId,
     })),
+  setIsCoverVisible: (isCoverVisible) => set({ isCoverVisible }),
+  playPreview: () =>
+    set({
+      isPreviewMode: true,
+      isCoverVisible: true,
+      isGiftModalOpen: false,
+      activeMockup: "invitation",
+      selectedElementId: null,
+    }),
+  setIsGiftModalOpen: (isGiftModalOpen) => set({ isGiftModalOpen }),
+  openGiftModal: () =>
+    set({
+      isPreviewMode: true,
+      isGiftModalOpen: true,
+      activeMockup: "invitation",
+      selectedElementId: null,
+    }),
+  addGiftButton: (sectionIndex) => {
+    const activeSec = sectionIndex ?? get().activeSection ?? 0;
+    get().addElement("button", {
+      name: "Tombol Kirim Gift (Sticky)",
+      buttonText: "",
+      buttonIcon: "gift",
+      buttonVariant: "gold-luxury",
+      buttonAction: "gift-modal",
+      positionMode: "fixed",
+      width: 48,
+      height: 48,
+      buttonPulse: true,
+      buttonBgType: "gradient",
+      buttonBgColor: "#e11d48",
+      buttonBgGradientEnd: "#f59e0b",
+      buttonTextColor: "#ffffff",
+      buttonBorderColor: "#fcd34d",
+      buttonBorderWidth: 1.5,
+      buttonBorderRadius: 9999,
+      buttonShape: "pill",
+      buttonShadow: "luxury",
+      position: { top: "84%", left: "80%" },
+      sectionIndex: activeSec,
+    });
+  },
+  isMusicPlaying: false,
+  audioUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-wedding-background-music-113543.mp3",
+  toggleMusic: () => set((state) => ({ isMusicPlaying: !state.isMusicPlaying })),
+  setIsMusicPlaying: (isMusicPlaying) => set({ isMusicPlaying }),
+  setAudioUrl: (audioUrl) => set({ audioUrl }),
+  addMusicButton: (sectionIndex) => {
+    const activeSec = sectionIndex ?? get().activeSection ?? 0;
+    get().addElement("button", {
+      name: "Tombol Putar Musik (Sticky)",
+      buttonText: "",
+      buttonIcon: "music",
+      buttonVariant: "gold-luxury",
+      buttonAction: "toggle-music",
+      positionMode: "fixed",
+      width: 48,
+      height: 48,
+      buttonShape: "pill",
+      buttonPulse: true,
+      buttonBgType: "gradient",
+      buttonBgColor: "#059669",
+      buttonBgGradientEnd: "#10b981",
+      buttonTextColor: "#ffffff",
+      buttonBorderColor: "#6ee7b7",
+      buttonBorderWidth: 1.5,
+      buttonBorderRadius: 9999,
+      buttonShadow: "luxury",
+      position: { top: "84%", left: "6%" },
+      sectionIndex: activeSec,
+    });
+  },
   addSection: () =>
     set((state) => ({ sectionsCount: Math.min(10, state.sectionsCount + 1) })),
   removeSection: () =>
     set((state) => ({ sectionsCount: Math.max(1, state.sectionsCount - 1) })),
   setSectionsCount: (sectionsCount) =>
     set({ sectionsCount: Math.max(1, Math.min(10, sectionsCount)) }),
+  setActiveSection: (activeSection) => set({ activeSection }),
+  scrollToSection: (index) =>
+    set({
+      activeSection: index,
+      activeMockup: "invitation",
+      targetScrollSection: { index, timestamp: Date.now() },
+    }),
   addOpeningSectionLayout: () =>
     set((state) => {
       const now = Date.now();
@@ -427,23 +1439,37 @@ export const useEditorStore = create<EditorState>((set) => ({
         selectedElementId: btnId,
       };
     }),
-  addOpenInvitationButton: (sectionIndex = 0) =>
+  addOpenInvitationButton: (sectionIndex) =>
     set((state) => {
       const id = `button-open-invitation-${Date.now()}`;
+      const targetSec = sectionIndex !== undefined ? sectionIndex : (state.activeSection ?? 0);
       const targetTop =
-        sectionIndex === 0
-          ? "75%"
-          : `${sectionIndex * 720 + 520}px`;
+        state.activeMockup === "invitation"
+          ? `${targetSec * 844 + 480}px`
+          : "75%";
       const newButton: EditorCanvasElement = {
         id,
         type: "button",
+        mockupType: state.activeMockup,
+        sectionIndex: state.activeMockup === "invitation" ? targetSec : undefined,
         content: "Buka Undangan",
         buttonText: "Buka Undangan",
         buttonIcon: "mail",
         buttonVariant: "gold-luxury",
         buttonAction: "scroll-to-section",
-        buttonTargetSection: Math.min(sectionIndex + 1, Math.max(1, state.sectionsCount - 1)),
+        buttonTargetSection: Math.min(targetSec + 1, Math.max(1, state.sectionsCount - 1)),
         buttonPulse: true,
+        buttonBgType: "gradient",
+        buttonBgColor: "#d97706",
+        buttonBgGradientEnd: "#eab308",
+        buttonTextColor: "#0a0a0a",
+        buttonBorderColor: "#fcd34d",
+        buttonBorderWidth: 1,
+        buttonBorderRadius: 9999,
+        buttonShape: "pill",
+        buttonFontSize: 13,
+        buttonFontWeight: "bold",
+        buttonShadow: "glow",
         style: "",
         top: targetTop,
         left: "17%",
@@ -471,6 +1497,8 @@ export const useEditorStore = create<EditorState>((set) => ({
             type: "button",
             visible: true,
             locked: false,
+            mockupType: state.activeMockup,
+            sectionIndex: state.activeMockup === "invitation" ? targetSec : undefined,
           },
         ],
         selectedElementId: id,
@@ -480,6 +1508,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((state) => {
       const id = `layer-${Date.now() + 1}`;
       const position = options.position;
+      const targetSec = options.sectionIndex ?? state.activeSection ?? 0;
       const selectedContainer = state.elements.find(
         (element) =>
           element.id === state.selectedElementId &&
@@ -496,9 +1525,18 @@ export const useEditorStore = create<EditorState>((set) => ({
                 ? "h-24 w-24 bg-amber-300/70 [clip-path:polygon(50%_0%,61%_35%,98%_35%,68%_57%,79%_100%,50%_73%,21%_100%,32%_57%,2%_35%,39%_35%)]"
                 : "h-24 w-24 rounded-xl border-2 border-amber-300/80 bg-amber-300/30";
       const isBtn = type === "button";
+
+      const defaultTop = selectedContainer
+        ? "0%"
+        : state.activeMockup === "invitation"
+          ? `${targetSec * 844 + (isBtn ? 480 : 300)}px`
+          : (isBtn ? "75%" : "10%");
+
       const newElement: EditorCanvasElement = {
         id,
         type,
+        mockupType: state.activeMockup,
+        sectionIndex: state.activeMockup === "invitation" ? targetSec : undefined,
         content:
           options.content ??
           (type === "text"
@@ -515,7 +1553,7 @@ export const useEditorStore = create<EditorState>((set) => ({
               : isBtn
                 ? ""
                 : defaultShapeStyle),
-        top: position?.top ?? (selectedContainer ? "0%" : isBtn ? "75%" : "10%"),
+        top: position?.top ?? defaultTop,
         left: position?.left ?? (selectedContainer ? "0%" : isBtn ? "18%" : "10%"),
         shape: options.shape,
         parentId: options.parentId ?? selectedContainer?.id,
@@ -540,9 +1578,21 @@ export const useEditorStore = create<EditorState>((set) => ({
         buttonIcon: isBtn ? options.buttonIcon ?? "mail" : undefined,
         buttonVariant: isBtn ? options.buttonVariant ?? "gold-luxury" : undefined,
         buttonAction: isBtn ? options.buttonAction ?? "scroll-to-section" : undefined,
-        buttonTargetSection: isBtn ? options.buttonTargetSection ?? 1 : undefined,
+        buttonTargetSection: isBtn ? options.buttonTargetSection ?? 0 : undefined,
         buttonPulse: isBtn ? options.buttonPulse ?? true : undefined,
         buttonUrl: isBtn ? options.buttonUrl : undefined,
+        buttonCustomCode: isBtn ? options.buttonCustomCode : undefined,
+        buttonBgType: isBtn ? (options.buttonBgType ?? "gradient") : undefined,
+        buttonBgColor: isBtn ? (options.buttonBgColor ?? "#d97706") : undefined,
+        buttonBgGradientEnd: isBtn ? (options.buttonBgGradientEnd ?? "#eab308") : undefined,
+        buttonTextColor: isBtn ? (options.buttonTextColor ?? "#0a0a0a") : undefined,
+        buttonBorderColor: isBtn ? (options.buttonBorderColor ?? "#fcd34d") : undefined,
+        buttonBorderWidth: isBtn ? (options.buttonBorderWidth ?? 1) : undefined,
+        buttonBorderRadius: isBtn ? (options.buttonBorderRadius ?? 9999) : undefined,
+        buttonShape: isBtn ? (options.buttonShape ?? "pill") : undefined,
+        buttonFontSize: isBtn ? (options.buttonFontSize ?? 13) : undefined,
+        buttonFontWeight: isBtn ? (options.buttonFontWeight ?? "bold") : undefined,
+        buttonShadow: isBtn ? (options.buttonShadow ?? "glow") : undefined,
         animation: {
           mount: isBtn ? "spring-pop" : "none",
           unmount: "none",
@@ -570,6 +1620,8 @@ export const useEditorStore = create<EditorState>((set) => ({
             type,
             visible: true,
             locked: false,
+            mockupType: state.activeMockup,
+            sectionIndex: state.activeMockup === "invitation" ? targetSec : undefined,
           },
         ],
         selectedElementId: id,
@@ -581,6 +1633,7 @@ export const useEditorStore = create<EditorState>((set) => ({
       const newContainer: EditorCanvasElement = {
         id: containerId,
         type: "container",
+        mockupType: state.activeMockup,
         content: "",
         style: "border border-dashed border-amber-500/30 rounded-xl",
         top: "10%",
@@ -693,36 +1746,114 @@ export const useEditorStore = create<EditorState>((set) => ({
   moveLayer: (id, targetId, asChild = false) =>
     set((state) => {
       const index = state.layers.findIndex((layer) => layer.id === id);
-      const targetIndex = state.layers.findIndex(
-        (layer) => layer.id === targetId,
-      );
-      if (index < 0 || targetIndex < 0 || index === targetIndex) return state;
+      if (index < 0) return state;
+
       const layers = [...state.layers];
       const [movedLayer] = layers.splice(index, 1);
-      const targetLayer = layers.find((layer) => layer.id === targetId);
-      if (!targetLayer) return state;
+
+      const targetIndex = layers.findIndex((layer) => layer.id === targetId);
+      if (targetIndex < 0) return state;
+
+      const insertIndex = asChild ? targetIndex + 1 : targetIndex;
+      layers.splice(insertIndex, 0, movedLayer);
+
       const targetElement = state.elements.find(
         (element) => element.id === targetId,
       );
       const movedElement = state.elements.find((element) => element.id === id);
       if (!movedElement) return state;
 
-      const nextParentId = asChild ? targetId : targetElement?.parentId;
-      const elements = state.elements.map((element) =>
-        element.id === id
-          ? {
-            ...element,
-            parentId: nextParentId,
-            positionMode: nextParentId
-              ? ("relative" as const)
-              : ("absolute" as const),
-            top: nextParentId ? "0%" : element.top,
-            left: nextParentId ? "0%" : element.left,
-          }
-          : element,
-      );
-      layers.splice(asChild ? targetIndex + 1 : targetIndex, 0, movedLayer);
+      let elements = state.elements;
+      if (asChild && targetElement?.type === "container") {
+        elements = state.elements.map((element) =>
+          element.id === id
+            ? {
+                ...element,
+                parentId: targetId,
+                positionMode: "relative" as const,
+              }
+            : element,
+        );
+      }
+
       return { layers, elements };
+    }),
+  bringForward: (id) =>
+    set((state) => {
+      const idx = state.layers.findIndex((l) => l.id === id);
+      if (idx < 0 || idx >= state.layers.length - 1) return state;
+      const layers = [...state.layers];
+      const [layer] = layers.splice(idx, 1);
+      layers.splice(idx + 1, 0, layer);
+      return { layers };
+    }),
+  sendBackward: (id) =>
+    set((state) => {
+      const idx = state.layers.findIndex((l) => l.id === id);
+      if (idx <= 0) return state;
+      const layers = [...state.layers];
+      const [layer] = layers.splice(idx, 1);
+      layers.splice(idx - 1, 0, layer);
+      return { layers };
+    }),
+  bringToFront: (id) =>
+    set((state) => {
+      const idx = state.layers.findIndex((l) => l.id === id);
+      if (idx < 0 || idx === state.layers.length - 1) return state;
+      const layers = [...state.layers];
+      const [layer] = layers.splice(idx, 1);
+      layers.push(layer);
+      return { layers };
+    }),
+  sendToBack: (id) =>
+    set((state) => {
+      const idx = state.layers.findIndex((l) => l.id === id);
+      if (idx <= 0) return state;
+      const layers = [...state.layers];
+      const [layer] = layers.splice(idx, 1);
+      layers.unshift(layer);
+      return { layers };
+    }),
+  alignElement: (id, alignment) =>
+    set((state) => {
+      const element = state.elements.find((el) => el.id === id);
+      if (!element) return state;
+
+      const frameWidth = 390;
+      const secIdx = getElementSectionIndex(element, state.elements, state.sectionsCount);
+      const sectionTopPx = secIdx * 844;
+      const elWidth = element.width || 100;
+      const elHeight = element.height || 100;
+
+      let newLeft = element.left;
+      let newTop = element.top;
+
+      switch (alignment) {
+        case "left":
+          newLeft = "0px";
+          break;
+        case "center-x":
+          newLeft = `${Math.round((frameWidth - elWidth) / 2)}px`;
+          break;
+        case "right":
+          newLeft = `${Math.round(frameWidth - elWidth)}px`;
+          break;
+        case "top":
+          newTop = `${sectionTopPx}px`;
+          break;
+        case "center-y":
+          newTop = `${Math.round(sectionTopPx + (844 - elHeight) / 2)}px`;
+          break;
+        case "bottom":
+          newTop = `${Math.round(sectionTopPx + 844 - elHeight)}px`;
+          break;
+      }
+
+      return {
+        elements: state.elements.map((el) =>
+          el.id === id ? { ...el, left: newLeft, top: newTop } : el,
+        ),
+      };
     }),
   setFontSize: (fontSize) => set({ fontSize }),
   setPendingImageFile: (pendingImageFile) => set({ pendingImageFile }),

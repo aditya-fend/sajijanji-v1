@@ -1,0 +1,15 @@
+{
+  "name": "sajijanji-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --dir edit dev",
+    "dev:edit": "pnpm --dir edit dev",
+    "dev:landing": "pnpm --dir landing_page dev",
+    "build": "pnpm --dir edit build",
+    "build:landing": "pnpm --dir landing_page build",
+    "lint": "pnpm --dir edit lint",
+    "lint:landing": "pnpm --dir landing_page lint"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

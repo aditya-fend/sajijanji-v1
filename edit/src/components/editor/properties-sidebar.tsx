@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import {
   useEditorStore,
+  DEFAULT_SECTIONS,
   type AnimationName,
   type ContainerSizeMode,
   type TextEffectType,
@@ -39,8 +40,13 @@ import {
   Grid3X3,
   Layers,
   Mail,
+  Gift,
+  Music,
   MousePointerClick,
   ExternalLink,
+  Code2,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import {
   MOUNT_ANIMATION_OPTIONS,
@@ -320,8 +326,11 @@ function CanvasPropertiesSidebar() {
   const sectionsCount = useEditorStore((state) => state.sectionsCount);
   const addSection = useEditorStore((state) => state.addSection);
   const removeSection = useEditorStore((state) => state.removeSection);
+  const laptopCoverImage = useEditorStore((state) => state.laptopCoverImage);
+  const setLaptopCoverImage = useEditorStore((state) => state.setLaptopCoverImage);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const laptopFileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -377,23 +386,23 @@ function CanvasPropertiesSidebar() {
         <div className="flex items-center gap-2">
           <Sliders className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold text-foreground">
-            Properti Canvas & Mockup
+            Properti Canvas & Template
           </h2>
         </div>
         <span className="flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] text-amber-400 border border-amber-500/20">
           <Smartphone className="h-3 w-3" />
-          360 × 720
+          390 × 844
         </span>
       </div>
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-5">
-          {/* 1. Upload Gambar Background Mockup Frame */}
+          {/* 1. Upload Gambar Background Template */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <LucideImage className="h-3.5 w-3.5 text-amber-400" />
-                Gambar Background Mockup
+                Gambar Background Canvas
               </Label>
               {bgImage && (
                 <button
@@ -533,7 +542,7 @@ function CanvasPropertiesSidebar() {
                     }
                     className="h-8 w-full rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary"
                   >
-                    <option value="section-cover">Terapkan ke Semua Section (Pas 720px per Halaman)</option>
+                    <option value="section-cover">Terapkan ke Semua Section (Pas 844px per Halaman)</option>
                     <option value="custom">Bebas / Kustom (Skala & Posisi Slider ke Semua Section)</option>
                     <option value="contain">Muat Utuh Tanpa Terpotong (Contain di Semua Section)</option>
                     <option value="cover">1 Gambar Membentang Panjang (Cover Seluruh Canvas)</option>
@@ -762,6 +771,73 @@ function CanvasPropertiesSidebar() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* COVER LAPTOP SECTION (Sisi Kiri Tampilan Desktop / Laptop) */}
+          <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3.5 mt-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
+                <Smartphone className="h-3.5 w-3.5 text-amber-400 rotate-90" />
+                Cover Laptop (Sisi Kiri Desktop)
+              </Label>
+              {laptopCoverImage && (
+                <button
+                  type="button"
+                  onClick={() => setLaptopCoverImage(null)}
+                  className="flex items-center gap-1 text-[11px] text-rose-400 hover:text-rose-300 transition-colors cursor-pointer"
+                  title="Reset foto cover laptop ke default"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Reset
+                </button>
+              )}
+            </div>
+
+            <input
+              ref={laptopFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const url = URL.createObjectURL(file);
+                  setLaptopCoverImage(url);
+                }
+              }}
+            />
+
+            {laptopCoverImage ? (
+              <div className="relative h-28 w-full overflow-hidden rounded-xl border border-amber-500/30 bg-neutral-950 group">
+                <img
+                  src={laptopCoverImage}
+                  alt="Cover Laptop Preview"
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => laptopFileInputRef.current?.click()}
+                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-xs font-bold text-amber-300 cursor-pointer"
+                >
+                  <Upload className="h-4 w-4" />
+                  Ganti Foto Cover Laptop
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => laptopFileInputRef.current?.click()}
+                className="flex h-24 w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-amber-500/40 bg-background/50 hover:bg-primary/5 hover:border-primary transition-all cursor-pointer"
+              >
+                <Upload className="h-5 w-5 text-amber-400" />
+                <span className="text-xs font-medium text-foreground">Upload Foto Cover Laptop</span>
+                <span className="text-[10px] text-muted-foreground">Rekomendasi lanskap (16:9)</span>
+              </button>
+            )}
+
+            <p className="text-[10px] text-muted-foreground leading-tight">
+              Foto ini tampil besar di sisi kiri saat undangan dibuka di layar laptop / PC desktop (sesuai referensi desain).
+            </p>
           </div>
 
           <Separator />
@@ -1122,6 +1198,116 @@ export default function RightPropertiesSidebar() {
                     nama mempelai, dan salam pembuka.
                   </p>
                 </div>
+
+                {/* Pengaturan Tanggal Target Hitung Mundur (Countdown) */}
+                <div className="space-y-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-amber-400" />
+                      Hitung Mundur Acara (Countdown)
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        update({
+                          isCountdown: !(element.isCountdown ?? element.id.includes("countdown")),
+                        })
+                      }
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                        (element.isCountdown ?? element.id.includes("countdown"))
+                          ? "bg-amber-400 text-neutral-950 font-bold shadow-sm"
+                          : "bg-neutral-800 text-neutral-400 hover:text-neutral-200"
+                      }`}
+                    >
+                      {(element.isCountdown ?? element.id.includes("countdown"))
+                        ? "Aktif ✨"
+                        : "Aktifkan"}
+                    </button>
+                  </div>
+
+                  {(element.isCountdown ?? element.id.includes("countdown")) && (
+                    <div className="space-y-1.5 pt-1">
+                      <Label className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-amber-400" />
+                        Pilih Tanggal & Waktu Acara:
+                      </Label>
+                      <input
+                        type="datetime-local"
+                        value={element.countdownTargetDate ?? "2026-09-20T08:00"}
+                        onChange={(event) =>
+                          update({
+                            countdownTargetDate: event.target.value,
+                            isCountdown: true,
+                          })
+                        }
+                        className="h-9 w-full rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary cursor-pointer font-mono"
+                      />
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Hitung mundur otomatis menghitung sisa Hari, Jam, Menit, & Detik tanpa background box.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mode Form RSVP (Konfirmasi Kehadiran) */}
+                <div className="space-y-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-amber-400" />
+                      Mode Form RSVP Kehadiran
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        update({
+                          isRsvpForm: !(element.isRsvpForm ?? element.id.includes("rsvp")),
+                        })
+                      }
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                        (element.isRsvpForm ?? element.id.includes("rsvp"))
+                          ? "bg-amber-400 text-neutral-950 font-bold shadow-sm"
+                          : "bg-neutral-800 text-neutral-400 hover:text-neutral-200"
+                      }`}
+                    >
+                      {(element.isRsvpForm ?? element.id.includes("rsvp"))
+                        ? "Aktif ✨"
+                        : "Aktifkan"}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Menampilkan form interaktif bagi tamu undangan untuk mengonfirmasi kehadiran, jumlah tamu, & ucapan.
+                  </p>
+                </div>
+
+                {/* Mode Buku Tamu (Guestbook List) */}
+                <div className="space-y-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 mt-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                      Mode Daftar Ucapan (Guestbook)
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        update({
+                          isGuestbook: !(element.isGuestbook ?? element.id.includes("guestbook")),
+                        })
+                      }
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                        (element.isGuestbook ?? element.id.includes("guestbook"))
+                          ? "bg-amber-400 text-neutral-950 font-bold shadow-sm"
+                          : "bg-neutral-800 text-neutral-400 hover:text-neutral-200"
+                      }`}
+                    >
+                      {(element.isGuestbook ?? element.id.includes("guestbook"))
+                        ? "Aktif ✨"
+                        : "Aktifkan"}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Menampilkan daftar kartu ucapan, doa restu, & status kehadiran dari tamu undangan.
+                  </p>
+                </div>
               </>
             )}
 
@@ -1163,6 +1349,7 @@ export default function RightPropertiesSidebar() {
 
             {isButton && (
               <div className="space-y-4">
+                {/* 1. Teks Tombol */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-foreground">Teks Tombol</Label>
                   <Input
@@ -1178,6 +1365,7 @@ export default function RightPropertiesSidebar() {
                   />
                 </div>
 
+                {/* 2. Pilihan Ikon */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-foreground">Pilihan Ikon</Label>
                   <select
@@ -1189,9 +1377,10 @@ export default function RightPropertiesSidebar() {
                     }
                     className="h-9 w-full rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary"
                   >
-                    <option value="mail">✉️ Amplop Surat (Buka saat Hover)</option>
+                    <option value="mail">✉️ Amplop Surat</option>
                     <option value="mail-open">💌 Surat Terbuka</option>
                     <option value="heart">💖 Hati Romantis (Love)</option>
+                    <option value="gift">🎁 Kado / Gift</option>
                     <option value="sparkles">✨ Sparkles (Kilauan Bintang)</option>
                     <option value="music">🎵 Nada Musik</option>
                     <option value="chevron-down">⬇️ Panah ke Bawah</option>
@@ -1199,50 +1388,502 @@ export default function RightPropertiesSidebar() {
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Tema Visual Tombol</Label>
-                  <select
-                    value={element.buttonVariant ?? "gold-luxury"}
-                    onChange={(event) =>
-                      update({
-                        buttonVariant: event.target.value as ButtonVariantType,
-                      })
-                    }
-                    className="h-9 w-full rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="gold-luxury">👑 Gold Luxury Pill (Mewah Emas)</option>
-                    <option value="glassmorphism">🪟 Glassmorphism (Kaca Blur Transparan)</option>
-                    <option value="pulse-glow">🌟 Amber Pulse Glow (Kilau Denyut Terang)</option>
-                    <option value="rose-romantic">🌹 Rose Pink Romantic (Anggun Romantis)</option>
-                    <option value="minimal-outline">🖤 Dark Minimal Outline (Garis Emas Elegan)</option>
-                  </select>
-                </div>
+                <Separator />
 
-                {/* Toggle Pulse Glow Animation */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                      Efek Gelombang Denyut (Pulse Wave)
+                {/* 3. BENTUK TOMBOL (SHAPE & CORNER RADIUS) */}
+                <div className="space-y-3 rounded-xl bg-secondary/40 border border-border/60 p-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Sliders className="h-3.5 w-3.5 text-primary" />
+                      Bentuk Tombol
                     </Label>
-                    <p className="text-[10px] text-muted-foreground">
-                      Cahaya denyut animasi menarik perhatian tamu
-                    </p>
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      {typeof element.buttonBorderRadius === "number"
+                        ? `${element.buttonBorderRadius}px`
+                        : (element.buttonShape ?? "pill")}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => update({ buttonPulse: !(element.buttonPulse ?? true) })}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                      element.buttonPulse ?? true
-                        ? "bg-amber-400 text-neutral-950 shadow-sm shadow-amber-400/50"
-                        : "bg-neutral-800 text-neutral-400"
-                    }`}
-                  >
-                    {(element.buttonPulse ?? true) ? "Aktif" : "Mati"}
-                  </button>
+
+                  {/* Preset Pilihan Bentuk */}
+                  <div className="grid grid-cols-5 gap-1">
+                    {[
+                      { id: "pill", label: "Pill", radius: 9999, icon: "💊" },
+                      { id: "rounded-xl", label: "Halus", radius: 16, icon: "🔲" },
+                      { id: "rounded-md", label: "Sedang", radius: 10, icon: "◻️" },
+                      { id: "rounded-sm", label: "Minimal", radius: 5, icon: "▫️" },
+                      { id: "square", label: "Kotak", radius: 0, icon: "⏹️" },
+                    ].map((shapeOption) => {
+                      const isSelected =
+                        (element.buttonBorderRadius ?? 9999) === shapeOption.radius ||
+                        (!element.buttonBorderRadius && (element.buttonShape ?? "pill") === shapeOption.id);
+
+                      return (
+                        <button
+                          key={shapeOption.id}
+                          type="button"
+                          onClick={() =>
+                            update({
+                              buttonShape: shapeOption.id as any,
+                              buttonBorderRadius: shapeOption.radius,
+                            })
+                          }
+                          className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+                              : "bg-background/80 hover:bg-secondary text-muted-foreground hover:text-foreground border-border/60"
+                          }`}
+                        >
+                          <span className="text-xs">{shapeOption.icon}</span>
+                          <span className="text-[9px] mt-0.5">{shapeOption.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Slider Radius Kustom */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-muted-foreground">Radius Sudut Kustom:</span>
+                      <span className="font-mono text-foreground">{element.buttonBorderRadius ?? 9999}px</span>
+                    </div>
+                    <Slider
+                      value={[Math.min(50, element.buttonBorderRadius ?? 9999)]}
+                      onValueChange={(val) => {
+                        const v = Array.isArray(val) ? val[0] : typeof val === "number" ? val : 0;
+                        update({
+                          buttonBorderRadius: v,
+                          buttonShape: v >= 40 ? "pill" : v === 0 ? "square" : "rounded-xl",
+                        });
+                      }}
+                      min={0}
+                      max={50}
+                      step={1}
+                    />
+                  </div>
                 </div>
 
-                {/* Aksi Klik Buka Undangan */}
+                <Separator />
+
+                {/* 4. WARNA & LATAR BELAKANG (COLOR & BACKGROUND) */}
+                <div className="space-y-3 rounded-xl bg-secondary/40 border border-border/60 p-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                      <Palette className="h-3.5 w-3.5 text-primary" />
+                      Warna & Latar Belakang
+                    </Label>
+                    <span className="text-[10px] font-mono text-amber-400 capitalize">
+                      {element.buttonBgType ?? "gradient"}
+                    </span>
+                  </div>
+
+                  {/* Tipe Latar: Gradient / Solid / Glass / Outline */}
+                  <div className="grid grid-cols-4 gap-1 p-0.5 rounded-lg bg-background/60 border border-border/40">
+                    {[
+                      { id: "gradient", label: "Gradien" },
+                      { id: "solid", label: "Solid" },
+                      { id: "glass", label: "Kaca Blur" },
+                      { id: "outline", label: "Garis" },
+                    ].map((typeOption) => {
+                      const isSelected = (element.buttonBgType ?? "gradient") === typeOption.id;
+                      return (
+                        <button
+                          key={typeOption.id}
+                          type="button"
+                          onClick={() => update({ buttonBgType: typeOption.id as any })}
+                          className={`py-1 text-[10px] rounded-md transition-all cursor-pointer font-medium ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                          }`}
+                        >
+                          {typeOption.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Preset Palet Warna Cepat */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-medium text-muted-foreground">Preset Warna Tema Pernikahan:</span>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[
+                        {
+                          name: "Gold Luxury",
+                          bgType: "gradient" as const,
+                          start: "#d97706",
+                          end: "#eab308",
+                          text: "#0a0a0a",
+                          border: "#fcd34d",
+                          swatch: "linear-gradient(135deg, #d97706, #eab308)",
+                        },
+                        {
+                          name: "Rose Romantic",
+                          bgType: "gradient" as const,
+                          start: "#f43f5e",
+                          end: "#e11d48",
+                          text: "#ffffff",
+                          border: "#fda4af",
+                          swatch: "linear-gradient(135deg, #f43f5e, #e11d48)",
+                        },
+                        {
+                          name: "Emerald Sage",
+                          bgType: "gradient" as const,
+                          start: "#059669",
+                          end: "#0d9488",
+                          text: "#ffffff",
+                          border: "#6ee7b7",
+                          swatch: "linear-gradient(135deg, #059669, #0d9488)",
+                        },
+                        {
+                          name: "Royal Navy",
+                          bgType: "gradient" as const,
+                          start: "#1e3a8a",
+                          end: "#2563eb",
+                          text: "#ffffff",
+                          border: "#60a5fa",
+                          swatch: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+                        },
+                        {
+                          name: "Frosted Glass",
+                          bgType: "glass" as const,
+                          start: "rgba(255, 255, 255, 0.16)",
+                          end: "rgba(255, 255, 255, 0.16)",
+                          text: "#ffffff",
+                          border: "rgba(255, 255, 255, 0.35)",
+                          swatch: "linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1))",
+                        },
+                        {
+                          name: "Dark Obsidian",
+                          bgType: "gradient" as const,
+                          start: "#18181b",
+                          end: "#27272a",
+                          text: "#fcd34d",
+                          border: "#d97706",
+                          swatch: "linear-gradient(135deg, #18181b, #27272a)",
+                        },
+                        {
+                          name: "Pearl White",
+                          bgType: "solid" as const,
+                          start: "#ffffff",
+                          end: "#ffffff",
+                          text: "#18181b",
+                          border: "#e4e4e7",
+                          swatch: "#ffffff",
+                        },
+                        {
+                          name: "Amethyst Violet",
+                          bgType: "gradient" as const,
+                          start: "#7c3aed",
+                          end: "#9333ea",
+                          text: "#ffffff",
+                          border: "#c084fc",
+                          swatch: "linear-gradient(135deg, #7c3aed, #9333ea)",
+                        },
+                      ].map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() =>
+                            update({
+                              buttonBgType: preset.bgType,
+                              buttonBgColor: preset.start,
+                              buttonBgGradientEnd: preset.end,
+                              buttonTextColor: preset.text,
+                              buttonBorderColor: preset.border,
+                            })
+                          }
+                          className="flex items-center gap-1.5 p-1 rounded-lg border border-border/50 bg-background/80 hover:scale-105 transition-all cursor-pointer text-left"
+                          title={preset.name}
+                        >
+                          <div
+                            className="h-3.5 w-3.5 rounded-full shrink-0 border border-black/20"
+                            style={{ background: preset.swatch }}
+                          />
+                          <span className="text-[9px] truncate">{preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Color Pickers */}
+                  <div className="space-y-2 pt-1">
+                    {/* Warna Utama */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-muted-foreground">
+                        {(element.buttonBgType ?? "gradient") === "gradient" ? "Warna Gradien Mulai:" : "Warna Latar:"}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={element.buttonBgColor ?? "#d97706"}
+                          onChange={(e) => update({ buttonBgColor: e.target.value })}
+                          className="h-7 w-7 cursor-pointer rounded-lg border border-border bg-transparent"
+                        />
+                        <Input
+                          value={element.buttonBgColor ?? "#d97706"}
+                          onChange={(e) => update({ buttonBgColor: e.target.value })}
+                          className="h-7 w-20 text-[10px] font-mono uppercase px-1.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Warna Gradien Selesai (Hanya jika mode Gradien) */}
+                    {(element.buttonBgType ?? "gradient") === "gradient" && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-muted-foreground">Warna Gradien Selesai:</span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={element.buttonBgGradientEnd ?? "#eab308"}
+                            onChange={(e) => update({ buttonBgGradientEnd: e.target.value })}
+                            className="h-7 w-7 cursor-pointer rounded-lg border border-border bg-transparent"
+                          />
+                          <Input
+                            value={element.buttonBgGradientEnd ?? "#eab308"}
+                            onChange={(e) => update({ buttonBgGradientEnd: e.target.value })}
+                            className="h-7 w-20 text-[10px] font-mono uppercase px-1.5"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Warna Teks */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-muted-foreground">Warna Teks:</span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={element.buttonTextColor ?? "#0a0a0a"}
+                          onChange={(e) => update({ buttonTextColor: e.target.value })}
+                          className="h-7 w-7 cursor-pointer rounded-lg border border-border bg-transparent"
+                        />
+                        <Input
+                          value={element.buttonTextColor ?? "#0a0a0a"}
+                          onChange={(e) => update({ buttonTextColor: e.target.value })}
+                          className="h-7 w-20 text-[10px] font-mono uppercase px-1.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Border & Garis Tepi */}
+                    <div className="space-y-1.5 pt-1 border-t border-border/40">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-muted-foreground">Garis Tepi (Border):</span>
+                        <div className="flex items-center gap-1">
+                          {[0, 1, 2, 3].map((px) => (
+                            <button
+                              key={px}
+                              type="button"
+                              onClick={() => update({ buttonBorderWidth: px })}
+                              className={`px-2 py-0.5 text-[10px] rounded-md border font-mono ${
+                                (element.buttonBorderWidth ?? 1) === px
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "border-border/60 hover:bg-secondary text-muted-foreground"
+                              }`}
+                            >
+                              {px}px
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {(element.buttonBorderWidth ?? 1) > 0 && (
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <span className="text-[10px] text-muted-foreground">Warna Border:</span>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={element.buttonBorderColor ?? "#fcd34d"}
+                              onChange={(e) => update({ buttonBorderColor: e.target.value })}
+                              className="h-6 w-6 cursor-pointer rounded-md border border-border bg-transparent"
+                            />
+                            <Input
+                              value={element.buttonBorderColor ?? "#fcd34d"}
+                              onChange={(e) => update({ buttonBorderColor: e.target.value })}
+                              className="h-6 w-20 text-[10px] font-mono uppercase px-1.5"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 5. TIPOGRAFI & FONT */}
+                <div className="space-y-3 rounded-xl bg-secondary/40 border border-border/60 p-3">
+                  <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Type className="h-3.5 w-3.5 text-primary" />
+                    Font & Tipografi
+                  </Label>
+
+                  {/* Font Family */}
+                  <div className="space-y-1">
+                    <span className="text-[11px] text-muted-foreground">Gaya Huruf (Font Family):</span>
+                    <select
+                      value={element.buttonFontFamily ?? "font-serif"}
+                      onChange={(e) => update({ buttonFontFamily: e.target.value })}
+                      className="h-9 w-full rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="font-serif">Playfair / Serif Klasik Elegan</option>
+                      <option value="font-sans">Inter / Modern Sans Clean</option>
+                      <option value="font-mono">Monospace Minimalis</option>
+                      <option value="'Playfair Display', serif">Playfair Display (Serif Mewah)</option>
+                      <option value="'Cormorant Garamond', serif">Cormorant Garamond (Eropa Klasik)</option>
+                      <option value="'Cinzel', serif">Cinzel (Royal Roman)</option>
+                      <option value="'Great Vibes', cursive">Great Vibes (Kaligrafi Romantis)</option>
+                    </select>
+                  </div>
+
+                  {/* Font Size Slider */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-muted-foreground">Ukuran Font:</span>
+                      <span className="font-mono text-foreground">{element.buttonFontSize ?? 13}px</span>
+                    </div>
+                    <Slider
+                      value={[element.buttonFontSize ?? 13]}
+                      onValueChange={(value) => update({ buttonFontSize: sliderValue(value) })}
+                      min={10}
+                      max={26}
+                      step={1}
+                    />
+                  </div>
+
+                  {/* Font Weight */}
+                  <div className="space-y-1">
+                    <span className="text-[11px] text-muted-foreground">Ketebalan Font (Weight):</span>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[
+                        { label: "Normal", value: "400" },
+                        { label: "Medium", value: "500" },
+                        { label: "SemiBold", value: "600" },
+                        { label: "Bold", value: "700" },
+                      ].map((w) => (
+                        <button
+                          key={w.value}
+                          type="button"
+                          onClick={() => update({ buttonFontWeight: w.value })}
+                          className={`py-1 text-[10px] rounded-md border text-center transition-all cursor-pointer ${
+                            (element.buttonFontWeight ?? "700") === w.value
+                              ? "bg-primary text-primary-foreground border-primary font-bold"
+                              : "border-border/60 hover:bg-secondary text-muted-foreground"
+                          }`}
+                        >
+                          {w.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Letter Spacing */}
+                  <div className="space-y-1">
+                    <span className="text-[11px] text-muted-foreground">Jarak Antar Huruf (Tracking):</span>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[
+                        { label: "Rapat", value: "normal" },
+                        { label: "Sedang", value: "0.05em" },
+                        { label: "Lebar", value: "0.15em" },
+                        { label: "Sangat Lebar", value: "0.25em" },
+                      ].map((track) => (
+                        <button
+                          key={track.value}
+                          type="button"
+                          onClick={() => update({ buttonLetterSpacing: track.value })}
+                          className={`py-1 text-[10px] rounded-md border text-center transition-all cursor-pointer ${
+                            (element.buttonLetterSpacing ?? "0.05em") === track.value
+                              ? "bg-primary text-primary-foreground border-primary font-bold"
+                              : "border-border/60 hover:bg-secondary text-muted-foreground"
+                          }`}
+                        >
+                          {track.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Text Transform */}
+                  <div className="space-y-1">
+                    <span className="text-[11px] text-muted-foreground">Kapitalisasi Teks:</span>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[
+                        { label: "Normal", value: "none" as const },
+                        { label: "BESAR", value: "uppercase" as const },
+                        { label: "Awal", value: "capitalize" as const },
+                      ].map((tr) => (
+                        <button
+                          key={tr.value}
+                          type="button"
+                          onClick={() => update({ buttonTextTransform: tr.value })}
+                          className={`py-1 text-[10px] rounded-md border text-center transition-all cursor-pointer ${
+                            (element.buttonTextTransform ?? "none") === tr.value
+                              ? "bg-primary text-primary-foreground border-primary font-bold"
+                              : "border-border/60 hover:bg-secondary text-muted-foreground"
+                          }`}
+                        >
+                          {tr.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 6. EFEK BAYANGAN, GLOW & PULSE */}
+                <div className="space-y-3 rounded-xl bg-secondary/40 border border-border/60 p-3">
+                  <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                    Efek Bayangan & Glow
+                  </Label>
+
+                  {/* Pilihan Shadow */}
+                  <div className="grid grid-cols-4 gap-1">
+                    {[
+                      { id: "none", label: "Flat" },
+                      { id: "soft", label: "Soft" },
+                      { id: "glow", label: "Glow ✨" },
+                      { id: "luxury", label: "Luxury 3D" },
+                    ].map((sh) => (
+                      <button
+                        key={sh.id}
+                        type="button"
+                        onClick={() => update({ buttonShadow: sh.id as any })}
+                        className={`py-1.5 text-[10px] rounded-md border text-center transition-all cursor-pointer font-medium ${
+                          (element.buttonShadow ?? "glow") === sh.id
+                            ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
+                            : "border-border/60 hover:bg-secondary text-muted-foreground"
+                        }`}
+                      >
+                        {sh.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Toggle Pulse Wave */}
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <div className="space-y-0.5">
+                      <span className="text-xs font-semibold text-amber-300">Gelombang Denyut (Pulse Wave)</span>
+                      <p className="text-[10px] text-muted-foreground">Animasi pendar cahaya otomatis</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => update({ buttonPulse: !(element.buttonPulse ?? true) })}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                        element.buttonPulse ?? true
+                          ? "bg-amber-400 text-neutral-950 shadow-sm shadow-amber-400/50"
+                          : "bg-neutral-800 text-neutral-400"
+                      }`}
+                    >
+                      {(element.buttonPulse ?? true) ? "Aktif" : "Mati"}
+                    </button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 7. AKSI KLIK TOMBOL */}
                 <div className="space-y-2.5 rounded-xl bg-secondary/50 border border-border/60 p-3">
                   <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <MousePointerClick className="h-3.5 w-3.5 text-primary" />
@@ -1272,6 +1913,28 @@ export default function RightPropertiesSidebar() {
                     >
                       <span>Buka Link URL</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ buttonAction: "gift-modal" })}
+                      className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                        element.buttonAction === "gift-modal"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border/60 hover:text-foreground"
+                      }`}
+                    >
+                      <span>Gift Modal</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ buttonAction: "toggle-music" })}
+                      className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                        element.buttonAction === "toggle-music"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border/60 hover:text-foreground"
+                      }`}
+                    >
+                      <span>Putar Musik</span>
+                    </button>
                   </div>
 
                   {(element.buttonAction ?? "scroll-to-section") === "scroll-to-section" ? (
@@ -1288,15 +1951,9 @@ export default function RightPropertiesSidebar() {
                       >
                         {Array.from({ length: Math.max(2, sectionsCount) }, (_, i) => (
                           <option key={i} value={i}>
-                            {i === 0
-                              ? "Section 1 (Cover / Sampul)"
-                              : i === 1
-                                ? "Section 2 (Mempelai & Acara)"
-                                : i === 2
-                                  ? "Section 3 (Lokasi & Waktu)"
-                                  : i === 3
-                                    ? "Section 4 (Doa & Ucapan)"
-                                    : `Section ${i + 1}`}
+                            {DEFAULT_SECTIONS[i]
+                              ? `Section ${i + 1} (${DEFAULT_SECTIONS[i]})`
+                              : `Section ${i + 1}`}
                           </option>
                         ))}
                       </select>
@@ -1317,6 +1974,14 @@ export default function RightPropertiesSidebar() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (element.buttonAction === "gift-modal") {
+                        useEditorStore.getState().openGiftModal();
+                        return;
+                      }
+                      if (element.mockupType === "cover") {
+                        useEditorStore.getState().playPreview();
+                        return;
+                      }
                       const btnDom = document.querySelector<HTMLElement>(`[data-element-id="${element.id}"]`);
                       if (btnDom) {
                         gsap.killTweensOf(btnDom);
@@ -1328,15 +1993,25 @@ export default function RightPropertiesSidebar() {
                       const scrollEl = document.querySelector<HTMLElement>(".overflow-y-auto");
                       if (scrollEl) {
                         scrollEl.scrollTo({
-                          top: (element.buttonTargetSection ?? 1) * 720,
+                          top: (element.buttonTargetSection ?? 0) * 844,
                           behavior: "smooth",
                         });
                       }
                     }}
                     className="w-full mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 py-2 text-xs font-semibold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
                   >
-                    <Play className="h-3.5 w-3.5 fill-current text-amber-400" />
-                    <span>Uji Coba Animasi & Scroll Buka Undangan</span>
+                    {element.buttonAction === "gift-modal" ? (
+                      <Gift className="h-3.5 w-3.5 text-rose-400" />
+                    ) : (
+                      <Play className="h-3.5 w-3.5 fill-current text-amber-400" />
+                    )}
+                    <span>
+                      {element.buttonAction === "gift-modal"
+                        ? "Uji Coba Munculkan Gift Modal"
+                        : element.mockupType === "cover"
+                          ? "Uji Coba Animasi Buka Undangan"
+                          : "Uji Coba Aksi Tombol"}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -1581,22 +2256,38 @@ export default function RightPropertiesSidebar() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>Posisi X</Label>
+                <Label className="text-[11px] text-muted-foreground">Posisi X (Kiri)</Label>
                 <Input
                   value={element.left}
                   onChange={(event) => update({ left: event.target.value })}
+                  placeholder="e.g. 80% atau 20px"
+                  className="h-8 text-xs font-mono"
                 />
               </div>
               <div className="space-y-1">
-                <Label>Posisi Y</Label>
+                <Label className="text-[11px] text-muted-foreground">Posisi Y (Atas)</Label>
                 <Input
                   value={element.top}
                   onChange={(event) => update({ top: event.target.value })}
+                  placeholder="e.g. 84% atau 100px"
+                  className="h-8 text-xs font-mono"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Position CSS</Label>
+
+            <div className="space-y-2.5 rounded-xl bg-secondary/40 border border-border/60 p-3">
+              <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Move className="h-3.5 w-3.5 text-primary" />
+                  Mode Posisi (Position Mode)
+                </span>
+                {element.positionMode === "fixed" && (
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Sticky Screen 📌
+                  </span>
+                )}
+              </Label>
+
               <select
                 value={element.positionMode ?? "relative"}
                 onChange={(event) =>
@@ -1608,13 +2299,135 @@ export default function RightPropertiesSidebar() {
                       | "sticky",
                   })
                 }
-                className="h-9 w-full rounded-md border border-border bg-background px-2 text-xs"
+                className="h-9 w-full rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:ring-1 focus:ring-primary"
               >
-                <option value="relative">Relative</option>
-                <option value="absolute">Absolute</option>
-                <option value="fixed">Fixed</option>
-                <option value="sticky">Sticky</option>
+                <option value="relative">Relative (Mengikuti Flow Container)</option>
+                <option value="absolute">Absolute (Menempel di Section Halaman)</option>
+                <option value="fixed">Fixed / Sticky (Melayang di Layar HP)</option>
               </select>
+
+              <p className="text-[10px] text-muted-foreground">
+                {element.positionMode === "fixed"
+                  ? "📌 Mode Fixed (Sticky): Elemen akan tetap melayang menempel di layar viewport HP saat undangan di-scroll."
+                  : "📄 Mode Absolute: Elemen menempel di posisi tertentu pada section halaman."}
+              </p>
+
+              {/* Preset Posisi Melayang (Sticky / Fixed Screen) */}
+              {element.positionMode === "fixed" && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <span className="text-[10px] font-bold text-amber-300 block">
+                    Preset Posisi Melayang di Layar HP:
+                  </span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => update({ top: "84%", left: "80%" })}
+                      className="px-2.5 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-amber-500/20 hover:border-amber-400 hover:text-amber-300 text-[10px] font-medium transition-all text-left cursor-pointer flex items-center justify-between"
+                    >
+                      <span>↘️ Kanan Bawah</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">80%,84%</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ top: "84%", left: "6%" })}
+                      className="px-2.5 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-amber-500/20 hover:border-amber-400 hover:text-amber-300 text-[10px] font-medium transition-all text-left cursor-pointer flex items-center justify-between"
+                    >
+                      <span>↙️ Kiri Bawah</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">6%,84%</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ top: "4%", left: "80%" })}
+                      className="px-2.5 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-amber-500/20 hover:border-amber-400 hover:text-amber-300 text-[10px] font-medium transition-all text-left cursor-pointer flex items-center justify-between"
+                    >
+                      <span>↗️ Kanan Atas</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">80%,4%</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => update({ top: "4%", left: "6%" })}
+                      className="px-2.5 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-amber-500/20 hover:border-amber-400 hover:text-amber-300 text-[10px] font-medium transition-all text-left cursor-pointer flex items-center justify-between"
+                    >
+                      <span>↖️ Kiri Atas</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">6%,4%</span>
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => update({ top: "84%", left: "42%" })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-amber-500/20 hover:border-amber-400 hover:text-amber-300 text-[10px] font-medium transition-all text-center cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <span>⬇️ Tengah Bawah</span>
+                    <span className="text-[9px] font-mono text-muted-foreground">(42%, 84%)</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Shortcut Tombol Gift & Musik Sticky untuk Elemen Tombol */}
+              {element.type === "button" && (
+                <div className="pt-2 border-t border-border/40 space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      update({
+                        buttonText: "",
+                        buttonIcon: "gift",
+                        buttonVariant: "gold-luxury",
+                        buttonAction: "gift-modal",
+                        positionMode: "fixed",
+                        width: 48,
+                        height: 48,
+                        buttonPulse: true,
+                        buttonBgType: "gradient",
+                        buttonBgColor: "#e11d48",
+                        buttonBgGradientEnd: "#f59e0b",
+                        buttonTextColor: "#ffffff",
+                        buttonBorderColor: "#fcd34d",
+                        buttonBorderWidth: 1.5,
+                        buttonBorderRadius: 9999,
+                        buttonShape: "pill",
+                        buttonShadow: "luxury",
+                        top: "84%",
+                        left: "80%",
+                      })
+                    }
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-gradient-to-r from-rose-500/20 to-amber-500/20 hover:from-rose-500/30 hover:to-amber-500/30 border border-rose-500/40 text-rose-300 text-xs font-semibold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
+                  >
+                    <Gift className="h-4 w-4 text-rose-400" />
+                    <span>Ubah Menjadi Tombol Gift (Sticky)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      update({
+                        buttonText: "",
+                        buttonIcon: "music",
+                        buttonVariant: "gold-luxury",
+                        buttonAction: "toggle-music",
+                        positionMode: "fixed",
+                        width: 48,
+                        height: 48,
+                        buttonPulse: true,
+                        buttonBgType: "gradient",
+                        buttonBgColor: "#059669",
+                        buttonBgGradientEnd: "#10b981",
+                        buttonTextColor: "#ffffff",
+                        buttonBorderColor: "#6ee7b7",
+                        buttonBorderWidth: 1.5,
+                        buttonBorderRadius: 9999,
+                        buttonShape: "pill",
+                        buttonShadow: "luxury",
+                        top: "84%",
+                        left: "6%",
+                      })
+                    }
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold cursor-pointer transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
+                  >
+                    <Music className="h-4 w-4 text-emerald-400" />
+                    <span>Ubah Menjadi Tombol Musik (Sticky)</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
